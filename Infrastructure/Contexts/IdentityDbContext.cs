@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Contexts
 {
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    public class IdentityDbContext(DbContextOptions<IdentityDbContext> options)
         : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
     {
         public DbSet<SessionData> Sessions { get; set; } = null!;

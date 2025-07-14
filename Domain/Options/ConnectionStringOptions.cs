@@ -5,7 +5,7 @@
         //Commonly used section name in appsettings.json
         public const string SectionName = "ConnectionStrings";
 
-        //Default connection string name for the projects
+        //connection strings for different databases
         public string? IdentityDbConnection { get; set; }
         public string? ApplicationDbConnection { get; set; }
     }
