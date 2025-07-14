@@ -1,6 +1,8 @@
 ﻿using Domain;
+using Domain.Interfaces.Repositories;
 using Domain.Options;
 using Infrastructure.Contexts;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +22,8 @@ namespace Infrastructure
                 options.UseSqlServer(provider.GetRequiredService
                     <IOptionsSnapshot<ConnectionStringOptions>>().Value.IdentityDbConnection);
             });
+
+            services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
 
             return services;
         }

@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Infrastructure.Contexts;
 using Application;
+using Infrastructure.Seeds;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -97,6 +98,23 @@ if (app.Environment.IsDevelopment())
 
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+        await ApplicationUserSeed.SeedRolesAsync(roleManager);
+
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        await ApplicationUserSeed.SeedUserAsync(userManager);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+    }
 }
 
 app.UseHttpsRedirection();
