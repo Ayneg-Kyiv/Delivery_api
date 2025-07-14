@@ -4,6 +4,7 @@ using Api.Providers;
 using Infrastructure.Seeds;
 using Infrastructure.Contexts;
 using Domain.Models.Identity;
+using Application.Middleware;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -22,7 +23,6 @@ builder.Services.AddCors();
 
 builder.Services.AddSwaggerGen();
 
-
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
 {
     options.Password.RequiredLength = 8;
@@ -30,9 +30,12 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
+    
     options.User.RequireUniqueEmail = true;
-    options.Lockout.MaxFailedAccessAttempts = 5;
+
+    options.Lockout.MaxFailedAccessAttempts = 3;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+
 #if DEBUG
     options.SignIn.RequireConfirmedAccount = false;
     options.SignIn.RequireConfirmedEmail = false;
@@ -43,7 +46,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
     options.SignIn.RequireConfirmedPhoneNumber = false;
 #endif
 })
-    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddEntityFrameworkStores<IdentityDbContext>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddAuthentication(options =>
@@ -55,11 +58,13 @@ builder.Services.AddAuthentication(options =>
     .AddJwtBearer(options =>
     {
         options.SaveToken = true;
+
 #if DEBUG
         options.RequireHttpsMetadata = false;
 #else
         options.RequireHttpsMetadata = true;
 #endif
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -117,8 +122,11 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.UseCsrfProtection();
+
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

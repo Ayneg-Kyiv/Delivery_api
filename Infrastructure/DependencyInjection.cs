@@ -17,7 +17,7 @@ namespace Infrastructure
         {
             services.AddDomain(configuration);
 
-            services.AddDbContext<ApplicationDbContext>((provider, options) =>
+            services.AddDbContext<IdentityDbContext>((provider, options) =>
             {
                 options.UseSqlServer(provider.GetRequiredService
                     <IOptionsSnapshot<ConnectionStringOptions>>().Value.IdentityDbConnection);
