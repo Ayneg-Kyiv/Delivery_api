@@ -44,9 +44,9 @@ namespace Application.Services
                 var sessions = await sessionRepository.FindAsync(x => x.RefreshToken
                     == context.Request.Cookies["refresh_token"], default);
 
-                var sessionData = sessions.FirstOrDefault() 
+                var sessionData = sessions.FirstOrDefault()
                     ?? throw new InvalidOperationException("Session data not found.");
-                
+
                 await sessionRepository.DeleteAsync(sessionData, default);
             }
             catch (Exception ex)

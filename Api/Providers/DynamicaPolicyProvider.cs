@@ -1,17 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Api.Handlers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
-using Api.Handlers;
 
 namespace Api.Providers
 {
-    public class DynamicPolicyProvider : IAuthorizationPolicyProvider
+    public class DynamicPolicyProvider(IOptions<AuthorizationOptions> options) 
+        : IAuthorizationPolicyProvider
     {
-        public DefaultAuthorizationPolicyProvider PolicyProvider;
-
-        public DynamicPolicyProvider(IOptions<AuthorizationOptions> options)
-        {
-            PolicyProvider = new(options);
-        }
+        public DefaultAuthorizationPolicyProvider PolicyProvider = new(options);
 
         public Task<AuthorizationPolicy> GetDefaultPolicyAsync()
             => PolicyProvider.GetDefaultPolicyAsync();

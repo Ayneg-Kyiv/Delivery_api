@@ -1,11 +1,11 @@
-﻿using Domain.Models.Identity;
-using Domain.Interfaces.Services.Identity;
+﻿using Domain.Interfaces.Services.Identity;
+using Domain.Models.Identity;
 using Microsoft.AspNetCore.Http;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Configuration;
-using System.Text;
-using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace Application.Services
 {

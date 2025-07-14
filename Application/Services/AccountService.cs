@@ -1,7 +1,7 @@
 ﻿using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services.Identity;
-using Domain.Models.DTO;
-using Domain.Models.DTO.Identity;
+using Domain.Models.DTOs;
+using Domain.Models.DTOs.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;

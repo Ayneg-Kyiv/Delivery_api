@@ -14,13 +14,8 @@ namespace Api.Handlers
         }
     }
 
-    public class DynamicRoleRequirement : IAuthorizationRequirement
+    public class DynamicRoleRequirement(string roleName) : IAuthorizationRequirement
     {
-        public string RoleName { get; }
-
-        public DynamicRoleRequirement(string roleName)
-        {
-            RoleName = roleName;
-        }
+        public string RoleName { get; } = roleName;
     }
 }

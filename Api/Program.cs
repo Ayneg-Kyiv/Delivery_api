@@ -1,15 +1,15 @@
-using Application;
 using Api.Handlers;
 using Api.Providers;
-using Infrastructure.Seeds;
-using Infrastructure.Contexts;
-using Domain.Models.Identity;
+using Application;
 using Application.Middleware;
-using System.Text;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authorization;
+using Domain.Models.Identity;
+using Infrastructure.Contexts;
+using Infrastructure.Seeds;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +30,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
-    
+
     options.User.RequireUniqueEmail = true;
 
     options.Lockout.MaxFailedAccessAttempts = 3;
