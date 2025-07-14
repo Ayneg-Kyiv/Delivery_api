@@ -14,127 +14,230 @@ namespace Application.Services
                                 IBaseRepository<SessionData> sessionDataRepository,
                                 ITokenService tokenService) : IAccountService
     {
-        public Task<TResponse> ChangePasswordAsync(ChangePasswordDTO changePassword, HttpContext context)
+        public async Task<TResponse> ChangePasswordAsync(ChangePasswordDTO changePassword, HttpContext context)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // Validate input
+                if (changePassword == null) return TResponse.Failure(400, "Invalid request data");
+
+                if (string.IsNullOrWhiteSpace(changePassword.CurrentPassword) ||
+                    string.IsNullOrWhiteSpace(changePassword.NewPassword))
+                    return TResponse.Failure(400, "Old and new passwords are required");
+
+                var user = await userManager.FindByEmailAsync(changePassword.Email);
+                if (user == null) return TResponse.Failure(404, "User not found");
+
+                (bool isValid, string? errorMessage) = await IsPasswordValid(user, changePassword.NewPassword);
+
+                if (!isValid)
+                    return TResponse.Failure(400, errorMessage ?? "Password is not valid");
+
+                // Change password
+                var result = await userManager.ChangePasswordAsync(
+                    user, changePassword.CurrentPassword, changePassword.NewPassword);
+
+                if (!result.Succeeded)
+                {
+                    var errorMsg = string.Join("; ", result.Errors.Select(e => e.Description));
+                    return TResponse.Failure(400, $"Password change failed: {errorMsg}");
+                }
+
+                return TResponse.Successful("Password changed successfully");
+            }
+            catch (Exception ex)
+            {
+                return TResponse.Failure(500, $"An error occurred while changing password: {ex.Message}");
+            }
         }
 
-        public Task<TResponse> ChangeUserDataAsync(ChangeUserDataDTO changeUserData, HttpContext context)
+        public async Task<TResponse> ChangeUserDataAsync(ChangeUserDataDTO changeUserData, HttpContext context)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // Validate input
+                if (changeUserData == null)
+                    return TResponse.Failure(400, "Invalid request data");
+
+                if (string.IsNullOrWhiteSpace(changeUserData.Email))
+                    return TResponse.Failure(400, "Email is required");
+
+                var user = await userManager.FindByEmailAsync(changeUserData.Email);
+                if (user == null)
+                    return TResponse.Failure(404, "User not found");
+
+                // Update fields if provided
+                if (!string.IsNullOrWhiteSpace(changeUserData.FirstName))
+                    user.FirstName = changeUserData.FirstName;
+
+                if (!string.IsNullOrWhiteSpace(changeUserData.MiddleName))
+                    user.MiddleName = changeUserData.MiddleName;
+
+                if (!string.IsNullOrWhiteSpace(changeUserData.LastName))
+                    user.LastName = changeUserData.LastName;
+
+                if (changeUserData.DateOfBirth.HasValue)
+                    user.DateOfBirth = changeUserData.DateOfBirth;
+
+                if (!string.IsNullOrWhiteSpace(changeUserData.AboutMe))
+                    user.AboutMe = changeUserData.AboutMe;
+
+                // Save changes
+                var result = await userManager.UpdateAsync(user);
+
+                if (!result.Succeeded)
+                {
+                    var errorMsg = string.Join("; ", result.Errors.Select(e => e.Description));
+                    return TResponse.Failure(400, $"Failed to update user data: {errorMsg}");
+                }
+
+                return TResponse.Successful("User data updated successfully");
+            }
+            catch (Exception ex)
+            {
+                return TResponse.Failure(500, $"An error occurred while updating user data: {ex.Message}");
+            }
         }
 
         public async Task<TResponse> RefreshSessionAsync(HttpContext context)
         {
-            var refreshToken = context.Request.Cookies["refreshToken"];
+            try
+            {
+                var refreshToken = context.Request.Cookies["refreshToken"];
 
-            if (string.IsNullOrEmpty(refreshToken))
-                return TResponse.Failure(401, "No session on this device");
+                if (string.IsNullOrEmpty(refreshToken)) return TResponse.Failure(401, "No session on this device");
 
-            var sessionData = await sessionDataRepository.FindAsync
-                (x => x.RefreshToken == refreshToken, default);
+                var sessionData = await sessionDataRepository.FindAsync
+                    (x => x.RefreshToken == refreshToken, default);
 
-            if (sessionData == null)
-                return TResponse.Failure(401, "No session on this device");
+                if (sessionData == null) return TResponse.Failure(401, "No session on this device");
 
-            var user = await userManager.FindByIdAsync
-                (sessionData.FirstOrDefault()?.UserId.ToString() ?? "");
+                var user = await userManager.FindByIdAsync
+                    (sessionData.FirstOrDefault()?.UserId.ToString() ?? "");
 
-            if( user == null)
-                return TResponse.Failure(401, "User not found");
+                if (user == null) return TResponse.Failure(401, "User not found");
 
-            var newToken = await tokenService.RefreshSessionAsync(user, context);
-            
-            var roles = await userManager.GetRolesAsync(user
-                ?? throw new Exception("User not found"));
+                var roles = await userManager.GetRolesAsync(user
+                    ?? throw new Exception("User not found"));
 
-            return TResponse.Successful(new 
-            { 
-                id = user?.Id,
-                name = user?.UserName,
-                email = user?.Email,
-                token = newToken,
-                roles
-            });
+                var newToken = await tokenService.RefreshSessionAsync(user, roles, context);
+
+                if (string.IsNullOrEmpty(newToken))
+                    return TResponse.Failure(500, "Failed to refresh session");
+
+                return TResponse.Successful(new
+                {
+                    id = user?.Id,
+                    name = user?.UserName,
+                    email = user?.Email,
+                    token = newToken,
+                    roles
+                });
+            }
+            catch (Exception ex)
+            {
+                return TResponse.Failure(500, $"An error occurred while refreshing session: {ex.Message}");
+            }
         }
 
         public async Task<TResponse> SigninAsync(SigninDTO signin, HttpContext context)
         {
-            if (!IsValidEmail(signin.Email ?? ""))
-                return TResponse.Failure(400, "Email is incorrect");
+            try
+            {
+                if (!IsValidEmail(signin.Email ?? ""))
+                    return TResponse.Failure(400, "Email is incorrect");
 
-            var user = await userManager.FindByEmailAsync(signin.Email ?? "");
+                var user = await userManager.FindByEmailAsync(signin.Email ?? "");
 
-            if (user == null || !await userManager.CheckPasswordAsync(user, signin.Password ?? ""))
-                return TResponse.Failure(400, "Invalid email or password.");
+                if (user == null || !await userManager.CheckPasswordAsync(user, signin.Password ?? ""))
+                    return TResponse.Failure(400, "Invalid email or password.");
 
-            await tokenService.GetRefreshTokenAsync(user, context);
+                var roles = await userManager.GetRolesAsync(user);
 
-            var handledToken = await tokenService.GetTokenAsync(user);
+                await tokenService.GetRefreshTokenAsync(user, roles, context);
 
-            var roles = await userManager.GetRolesAsync(user);
+                var handledToken = await tokenService.GetTokenAsync(user, roles);
 
-            return TResponse.Successful(new {
-                id = user.Id,
-                name = user.UserName,
-                email = user.Email,
-                token = handledToken,
-                roles,
-            });
+                return TResponse.Successful(new
+                {
+                    id = user.Id,
+                    name = user.UserName,
+                    email = user.Email,
+                    token = handledToken,
+                    roles,
+                });
+            }
+            catch (Exception ex)
+            {
+                return TResponse.Failure(500, $"An error occurred while signing in: {ex.Message}");
+            }
         }
 
         public async Task<TResponse> SignoutAsync(HttpContext context)
         {
-            if (!await sessionDataService.IsSessionExistsAsync(context))
-                return TResponse.Failure(401, "No session on this device");
-
-            await sessionDataService.RemoveSessionAsync(context);
-
-            //clean all cookies
-            if (context.Request.Cookies != null)
+            try
             {
-                foreach (var cookie in context.Request.Cookies.Keys)
-                {
-                    context.Response.Cookies.Delete(cookie);
-                }
-            }
+                if (!await sessionDataService.IsSessionExistsAsync(context))
+                    return TResponse.Failure(401, "No session on this device");
 
-            return TResponse.Successful("Signed out successfully");
+                await sessionDataService.RemoveSessionAsync(context);
+
+                //clean all cookies
+                if (context.Request.Cookies != null)
+                {
+                    foreach (var cookie in context.Request.Cookies.Keys)
+                        context.Response.Cookies.Delete(cookie);
+                }
+
+                return TResponse.Successful("Signed out successfully");
+            }
+            catch (Exception ex)
+            {
+                return TResponse.Failure(500, $"An error occurred while signing out: {ex.Message}");
+            }
         }
 
         public async Task<TResponse> SignupAsync(SignupDTO signup, HttpContext context)
         {
-
-            if (!IsValidEmail(signup.Email ?? ""))
-                return TResponse.Failure(400, "Email is incorrect");
-
-            var existingUser = await userManager.FindByEmailAsync(signup.Email ?? "");
-
-            if (existingUser != null)
-                return TResponse.Failure(400, "User already exists");
-
-            var user = new ApplicationUser()
+            try
             {
-                UserName = signup.Email,
-                Email = signup.Email
-            };
+                if (!IsValidEmail(signup.Email ?? ""))
+                    return TResponse.Failure(400, "Email is incorrect");
 
-            var account = await userManager.CreateAsync(user, signup.Password ?? "");
+                var existingUser = await userManager.FindByEmailAsync(signup.Email ?? "");
 
-            if (!account.Succeeded)
-                return TResponse.Failure(500, "Something went wrong");
+                if (existingUser != null) return TResponse.Failure(400, "User already exists");
 
-            if (!await roleManager.RoleExistsAsync("User"))
-            {
-                var roleResult = await roleManager.CreateAsync(new IdentityRole<Guid>("User"));
+                var user = new ApplicationUser()
+                {
+                    UserName = signup.Email,
+                    Email = signup.Email
+                };
 
-                if (!roleResult.Succeeded)
+                (bool isValid, string? errorMessage) = await IsPasswordValid(user, signup.Password ?? "");
+
+                if (!isValid) return TResponse.Failure(400, errorMessage ?? "Password is not valid");
+
+                var account = await userManager.CreateAsync(user, signup.Password ?? "");
+
+                if (!account.Succeeded)
                     return TResponse.Failure(500, "Something went wrong");
+
+                if (!await roleManager.RoleExistsAsync("User"))
+                {
+                    var roleResult = await roleManager.CreateAsync(new IdentityRole<Guid>("User"));
+
+                    if (!roleResult.Succeeded) return TResponse.Failure(500, "Something went wrong");
+                }
+
+                await userManager.AddToRoleAsync(user, "User");
+
+                return TResponse.Successful("Success");
             }
-
-            await userManager.AddToRoleAsync(user, "User");
-
-            return TResponse.Successful("Success");
+            catch (Exception ex)
+            {
+                return TResponse.Failure(500, $"An error occurred while signing up: {ex.Message}");
+            }
         }
 
         private static bool IsValidEmail(string email)
@@ -147,6 +250,21 @@ namespace Application.Services
             {
                 return false;
             }
+        }
+
+        private async Task<(bool isValid, string? ErrorMessage)> IsPasswordValid
+            (ApplicationUser user, string password)
+        {
+            var validators = userManager.PasswordValidators;
+
+            foreach (var validator in validators)
+            {
+                var result = await validator.ValidateAsync(userManager, user, password);
+
+                if (!result.Succeeded) return (false, result.Errors.FirstOrDefault()?.Description);
+            }
+
+            return (true, null);
         }
     }
 }

@@ -5,10 +5,10 @@ namespace Domain.Interfaces.Services.Identity
 {
     public interface ITokenService
     {
-        Task<string> GetTokenAsync(ApplicationUser user);
+        Task<string> GetTokenAsync(ApplicationUser user, IEnumerable<string> roles);
 
-        Task GetRefreshTokenAsync(ApplicationUser user, HttpContext context);
-        
-        Task<string> RefreshSessionAsync(ApplicationUser user, HttpContext context);
+        Task GetRefreshTokenAsync(ApplicationUser user, IEnumerable<string> roles, HttpContext context);
+
+        Task<string> RefreshSessionAsync(ApplicationUser user, IEnumerable<string> roles, HttpContext context);
     }
 }

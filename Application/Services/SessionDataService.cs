@@ -15,7 +15,7 @@ namespace Application.Services
                 UserId = userId,
                 RefreshToken = token,
                 UserAgent = context.Request.Headers["User-Agent"],
-                DeviceIdentificator = context.Request.Headers["Device-Id"],
+                DeviceIdentifier = context.Request.Headers["Device-Id"],
             };
 
             sessionData.SetIpAddress(context.Connection.RemoteIpAddress);
@@ -34,7 +34,7 @@ namespace Application.Services
         public async Task<bool> IsSessionExistsAsync(HttpContext context)
         {
             return await sessionRepository.FindAsync(x => x.RefreshToken
-            == context.Request.Cookies["refreshToken"], default) != null;
+                == context.Request.Cookies["refreshToken"], default) != null;
         }
 
         public async Task RemoveSessionAsync(HttpContext context)
@@ -42,17 +42,12 @@ namespace Application.Services
             try
             {
                 var sessions = await sessionRepository.FindAsync(x => x.RefreshToken
-                == context.Request.Cookies["refresh_token"], default);
+                    == context.Request.Cookies["refresh_token"], default);
 
-                var sessionData = sessions.FirstOrDefault();
-
-                if (sessionData != null)
-                {
-                    await sessionRepository.DeleteAsync(sessionData, default);
-                }
-                {
-                    throw new InvalidOperationException("Session data not found.");
-                }
+                var sessionData = sessions.FirstOrDefault() 
+                    ?? throw new InvalidOperationException("Session data not found.");
+                
+                await sessionRepository.DeleteAsync(sessionData, default);
             }
             catch (Exception ex)
             {
@@ -66,23 +61,18 @@ namespace Application.Services
             try
             {
                 var sessions = await sessionRepository.FindAsync(x => x.RefreshToken == oldToken, default);
-                var sessionData = sessions.FirstOrDefault();
 
-                if (sessionData != null)
-                {
-                    sessionData.RefreshToken = newToken;
+                var sessionData = sessions.FirstOrDefault()
+                    ?? throw new InvalidOperationException("Session data not found for the provided token.");
 
-                    sessionData.SetUpdatedAt();
-                    sessionData.SetLastActive();
+                sessionData.RefreshToken = newToken;
 
-                    await sessionRepository.UpdateAsync(sessionData, default);
-                }
-                else
-                {
-                    throw new InvalidOperationException("Session data not found for the provided token.");
-                }
+                sessionData.SetUpdatedAt();
+                sessionData.SetLastActive();
+
+                await sessionRepository.UpdateAsync(sessionData, default);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 // Handle exception (e.g., log it)
                 throw new InvalidOperationException("Failed to update session refresh token.", ex);

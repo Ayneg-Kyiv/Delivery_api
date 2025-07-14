@@ -1,14 +1,14 @@
-using Domain.Models.Identity;
+using Application;
 using Api.Handlers;
 using Api.Providers;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Infrastructure.Contexts;
-using Application;
 using Infrastructure.Seeds;
+using Infrastructure.Contexts;
+using Domain.Models.Identity;
+using System.Text;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
