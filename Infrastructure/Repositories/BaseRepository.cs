@@ -57,6 +57,29 @@ namespace Infrastructure.Repositories
             }
         }
 
+        public async Task<IEnumerable<T>> FindWithIncludesAndPaginationAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken, int pageNumber, int pageSize, params Expression<Func<T, object>>[] includes)
+        {
+            try
+            {
+                IQueryable<T> query = _dbSet.Where(predicate);
+                
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+
+                return await query.Skip((pageNumber - 1) * pageSize)
+                            .Take(pageSize)
+                            .ToListAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving entities with includes and pagination: {ex.Message}");
+                // Log the exception or handle it as needed
+                return [];
+            }
+        }
+
         public async Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken, params Expression<Func<T, object>>[] includes)
         {
             try
@@ -88,7 +111,7 @@ namespace Infrastructure.Repositories
             {
                 Console.WriteLine($"Error retrieving all entities: {ex.Message}");
                 // Log the exception or handle it as needed
-                return Enumerable.Empty<T>();
+                return [];
             }
         }
 

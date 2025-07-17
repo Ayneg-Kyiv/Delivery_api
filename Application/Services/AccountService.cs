@@ -201,8 +201,7 @@ namespace Application.Services
         {
             try
             {
-                if (!IsValidEmail(signup.Email ?? ""))
-                    return TResponse.Failure(400, "Email is incorrect");
+                if (!IsValidEmail(signup.Email ?? "")) return TResponse.Failure(400, "Email is incorrect");
 
                 var existingUser = await userManager.FindByEmailAsync(signup.Email ?? "");
 
@@ -220,8 +219,7 @@ namespace Application.Services
 
                 var account = await userManager.CreateAsync(user, signup.Password ?? "");
 
-                if (!account.Succeeded)
-                    return TResponse.Failure(500, "Something went wrong");
+                if (!account.Succeeded) return TResponse.Failure(500, "Something went wrong");
 
                 if (!await roleManager.RoleExistsAsync("User"))
                 {
