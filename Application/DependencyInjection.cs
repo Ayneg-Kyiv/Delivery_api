@@ -1,4 +1,5 @@
 ﻿using Application.Services;
+using Domain.Interfaces.Services;
 using Domain.Interfaces.Services.Identity;
 using Infrastructure;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +16,7 @@ namespace Application
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<ISessionDataService, SessionDataService>();
+            services.AddScoped<IFileService, FileService>();
 
             return services;
         }

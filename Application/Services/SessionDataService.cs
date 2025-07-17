@@ -18,7 +18,8 @@ namespace Application.Services
                 DeviceIdentifier = context.Request.Headers["Device-Id"],
             };
 
-            sessionData.SetIpAddress(context.Connection.RemoteIpAddress);
+            sessionData.SetIpAddress(context.Connection.RemoteIpAddress 
+                ?? throw new InvalidOperationException("Unable to determine IP address."));
 
             try
             {

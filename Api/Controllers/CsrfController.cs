@@ -11,6 +11,9 @@ namespace Api.Controllers
         public async Task<IActionResult> GetCsrfToken()
         {
             return await Task.FromResult(Ok());
+
+            // Note: application have csrf middleware, so this endpoint is just to return
+            // csrf token via middleware where it needed.
         }
     }
 }

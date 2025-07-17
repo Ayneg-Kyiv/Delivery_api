@@ -1,19 +1,44 @@
 ﻿using Domain.Interfaces.Repositories;
+using Domain.Interfaces.Services;
 using Domain.Interfaces.Services.Identity;
 using Domain.Models.DTOs;
 using Domain.Models.DTOs.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Application.Services
 {
     public class AccountService(UserManager<ApplicationUser> userManager,
                                 RoleManager<IdentityRole<Guid>> roleManager,
                                 ISessionDataService sessionDataService,
+                                IBaseRepository<ApplicationUser> applicationUserRepository,
                                 IBaseRepository<SessionData> sessionDataRepository,
-                                ITokenService tokenService) : IAccountService
+                                ITokenService tokenService,
+                                IFileService fileService) : IAccountService
     {
+        public async Task<TResponse> GetUserDataAsync(HttpContext context, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var email = context.User.FindFirst(JwtRegisteredClaimNames.Email)?.Value;
+
+                if (string.IsNullOrWhiteSpace(email))
+                    return TResponse.Failure(401, "No session on this device");
+
+                var user = await applicationUserRepository.FindAsync
+                    (x => x.Email == email, cancellationToken);
+
+                return TResponse.Successful(user);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting user data: {ex.Message}");
+                return TResponse.Failure(500, $"An error occurred while getting user data: {ex.Message}");
+            }
+        }
+
         public async Task<TResponse> ChangePasswordAsync(ChangePasswordDTO changePassword, HttpContext context)
         {
             try
@@ -47,6 +72,7 @@ namespace Application.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error changing password: {ex.Message}");
                 return TResponse.Failure(500, $"An error occurred while changing password: {ex.Message}");
             }
         }
@@ -99,6 +125,43 @@ namespace Application.Services
             }
         }
 
+        public async Task<TResponse> ChangeProfileImageAsync(UpdateProfileImageDTO updateProfileImage, HttpContext context, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // Validate input
+                if (updateProfileImage == null || updateProfileImage.Image == null)
+                    return TResponse.Failure(400, "Invalid request data");
+                
+                var user = await userManager.FindByEmailAsync(updateProfileImage.Email);
+                
+                if (user == null) return TResponse.Failure(404, "User not found");
+
+                var fileName = await fileService.SaveFileAsync(updateProfileImage.Image, cancellationToken);
+
+                if (string.IsNullOrEmpty(fileName))
+                    return TResponse.Failure(500, "Failed to save profile image");
+
+                user.ImagePath = fileName;
+
+                // Save changes
+                var result = await userManager.UpdateAsync(user);
+
+                if (!result.Succeeded)
+                {
+                    var errorMsg = string.Join("; ", result.Errors.Select(e => e.Description));
+                    return TResponse.Failure(400, $"Failed to update profile image: {errorMsg}");
+                }
+
+                return TResponse.Successful("Profile image updated successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating profile image: {ex.Message}");
+                return TResponse.Failure(500, $"An error occurred while updating profile image: {ex.Message}");
+            }
+        }
+
         public async Task<TResponse> RefreshSessionAsync(HttpContext context)
         {
             try
@@ -136,6 +199,7 @@ namespace Application.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error refreshing session: {ex.Message}");
                 return TResponse.Failure(500, $"An error occurred while refreshing session: {ex.Message}");
             }
         }
@@ -169,6 +233,7 @@ namespace Application.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error signing in: {ex.Message}");
                 return TResponse.Failure(500, $"An error occurred while signing in: {ex.Message}");
             }
         }
@@ -193,6 +258,7 @@ namespace Application.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error signing out: {ex.Message}");
                 return TResponse.Failure(500, $"An error occurred while signing out: {ex.Message}");
             }
         }
@@ -234,6 +300,7 @@ namespace Application.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error signing up: {ex.Message}");
                 return TResponse.Failure(500, $"An error occurred while signing up: {ex.Message}");
             }
         }
