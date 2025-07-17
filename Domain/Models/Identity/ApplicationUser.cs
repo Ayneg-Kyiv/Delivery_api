@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Models.Identity
 {
+    //Indexations are used to speed up queries on these fields
+    [Index(nameof(Email))]
     public class ApplicationUser : IdentityUser<Guid>
     {
         [MaxLength(100)]
