@@ -6,7 +6,6 @@ using Domain.Models.DTOs.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace Application.Services
 {
@@ -22,7 +21,8 @@ namespace Application.Services
         {
             try
             {
-                var email = context.User.FindFirst(JwtRegisteredClaimNames.Email)?.Value;
+                var email = context.User.Claims
+                    .FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
 
                 if (string.IsNullOrWhiteSpace(email))
                     return TResponse.Failure(401, "No session on this device");

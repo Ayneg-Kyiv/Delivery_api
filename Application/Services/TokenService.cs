@@ -45,8 +45,7 @@ namespace Application.Services
                     Secure = true,
                     SameSite = SameSiteMode.None,
                     Expires = DateTime.UtcNow.AddDays(
-                        double.Parse(configuration["Jwt:RefreshTokenExpiryDays"] ?? "")),
-                    Path = "/"
+                        double.Parse(configuration["Jwt:RefreshTokenExpiryDays"] ?? ""))
                 };
 
                 var oldRefreshToken = context.Request.Cookies["refreshToken"];
@@ -63,7 +62,8 @@ namespace Application.Services
             }
             catch (Exception ex)
             {
-                // Log the exception (ex) as needed
+                Console.WriteLine($"An error occurred while creating the refresh token: {ex.Message}");
+
                 throw new Exception("Failed to create refresh token", ex);
             }
         }
@@ -96,9 +96,10 @@ namespace Application.Services
 
                 return await Task.FromResult(new JwtSecurityTokenHandler().WriteToken(Token));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Log the exception (ex) as needed
+                Console.WriteLine($"An error occurred while generating the token: {ex.Message}");
+
                 return string.Empty;
             }
         }
@@ -115,9 +116,10 @@ namespace Application.Services
                     return await GetTokenAsync(user, roles);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Log the exception (ex) as needed
+                Console.WriteLine("An error occurred while refreshing the session: " + ex.Message);
+
                 return string.Empty;
             }
         }

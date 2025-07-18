@@ -5,12 +5,12 @@ using Application.Middleware;
 using Domain.Models.Identity;
 using Infrastructure.Contexts;
 using Infrastructure.Seeds;
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +23,11 @@ builder.Services.AddOpenApi();
 builder.Services.AddCors();
 
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-XSRF-TOKEN";
+});
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
 {
