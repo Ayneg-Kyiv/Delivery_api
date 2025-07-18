@@ -19,7 +19,7 @@ namespace Application.Middleware
 
                 context.Response.Cookies.Append(
                     "XSRF-TOKEN",
-                    tokens.RequestToken,
+                    tokens.RequestToken!,
                     new CookieOptions
                     {
                         SameSite = SameSiteMode.None,

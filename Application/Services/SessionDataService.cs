@@ -18,7 +18,8 @@ namespace Application.Services
                 DeviceIdentifier = context.Request.Headers["Device-Id"],
             };
 
-            sessionData.SetIpAddress(context.Connection.RemoteIpAddress);
+            sessionData.SetIpAddress(context.Connection.RemoteIpAddress 
+                ?? throw new InvalidOperationException("Unable to determine IP address."));
 
             try
             {
@@ -42,11 +43,11 @@ namespace Application.Services
             try
             {
                 var sessions = await sessionRepository.FindAsync(x => x.RefreshToken
-                    == context.Request.Cookies["refresh_token"], default);
+                    == context.Request.Cookies["refreshToken"], default);
 
-                var sessionData = sessions.FirstOrDefault() 
+                var sessionData = sessions.FirstOrDefault()
                     ?? throw new InvalidOperationException("Session data not found.");
-                
+
                 await sessionRepository.DeleteAsync(sessionData, default);
             }
             catch (Exception ex)

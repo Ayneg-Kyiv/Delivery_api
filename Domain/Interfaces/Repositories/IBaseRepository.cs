@@ -9,6 +9,12 @@ namespace Domain.Interfaces.Repositories
             CancellationToken cancellationToken);
         Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate,
             CancellationToken cancellationToken, params Expression<Func<T, object>>[] includes);
+        Task<IEnumerable<T>> FindWithIncludesAndPaginationAsync(
+            Expression<Func<T, bool>> predicate,
+            CancellationToken cancellationToken,
+            int pageNumber,
+            int pageSize,
+            params Expression<Func<T, object>>[] includes);
         Task<bool> AddAsync(T entity, CancellationToken cancellationToken);
         Task<bool> UpdateAsync(T entity, CancellationToken cancellationToken);
         Task<bool> DeleteAsync(T entity, CancellationToken cancellationToken);
