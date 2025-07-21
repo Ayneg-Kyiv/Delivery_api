@@ -8,7 +8,7 @@ namespace Infrastructure.Contexts
     public class IdentityDbContext(DbContextOptions<IdentityDbContext> options)
         : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
     {
-        public DbSet<SessionData> Sessions { get; set; } = null!;
+        public virtual DbSet<SessionData> Sessions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

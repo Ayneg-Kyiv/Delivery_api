@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Domain.Models.Identity
 {
@@ -33,5 +34,8 @@ namespace Domain.Models.Identity
         [Description("User's rating, can be used for various purposes like feedback or reputation")]
         [Range(0, 5, ErrorMessage = "Rating must be between 0 and 5.")]
         public float Rating { get; set; } = 0;
+
+        [JsonPropertyName("createdat")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
