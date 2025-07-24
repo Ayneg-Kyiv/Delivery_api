@@ -13,6 +13,9 @@ namespace Domain
             services.Configure<ConnectionStringOptions>(configuration
                 .GetSection(ConnectionStringOptions.SectionName));
 
+            services.Configure<SMTPServiceOptions>(configuration
+                .GetSection(SMTPServiceOptions.SectionName));
+
             return services;
         }
     }

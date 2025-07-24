@@ -37,5 +37,7 @@ namespace Domain.Models.Identity
 
         [JsonPropertyName("createdat")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public virtual IEnumerable<SessionData>? Sessions { get; set; }
     }
 }

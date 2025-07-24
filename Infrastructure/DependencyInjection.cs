@@ -1,8 +1,10 @@
 ﻿using Domain;
 using Domain.Interfaces.Repositories;
+using Domain.Interfaces.Services;
 using Domain.Options;
 using Infrastructure.Contexts;
 using Infrastructure.Repositories;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +26,7 @@ namespace Infrastructure
             });
 
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
+            services.AddScoped<IMailService, MailTrapService>();
 
             return services;
         }
