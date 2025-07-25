@@ -1,8 +1,13 @@
-public class CreateShippingOrderDto
+namespace Application.DTOs.Orders
 {
-    public decimal EstimatedCost { get; set; }
-    public float EstimatedDistance { get; set; }
-    public DateOnly EstimatedShippingDate { get; set; }
-    public TimeOnly EstimatedShippingTime { get; set; }
-    public Guid CustomerId { get; set; }
+    public class CreateShippingOrderDto
+    {
+        public Guid CustomerId { get; set; }
+
+        public decimal EstimatedCost { get; set; }
+        public float EstimatedDistance { get; set; }
+
+        public DateOnly EstimatedShippingDate { get; set; }
+        public TimeOnly EstimatedShippingTime { get; set; }
+    }
 }
