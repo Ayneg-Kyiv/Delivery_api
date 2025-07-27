@@ -44,7 +44,7 @@ namespace Infrastructure.Services
             {
                 var client = new SmtpClient(options.Value.Host, options.Value.Port)
                 {
-                    Credentials = new NetworkCredential("api", options.Value.AccessToken),
+                    Credentials = new NetworkCredential(options.Value.Username, options.Value.Password),
                     EnableSsl = true
                 };
 

@@ -159,7 +159,7 @@ namespace Application.Services
 
                 var confirmationToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
 
-                var confirmationLink = $"{context.Request.Scheme}://{context.Request.Host}/api/auth/confirm-email?token={confirmationToken}&email={Uri.EscapeDataString(user.Email!)}";
+                var confirmationLink = $"https://localhost:3000/confirm-email?token={Uri.EscapeDataString(confirmationToken)}&email={Uri.EscapeDataString(user.Email!)}";
 
                 await mailService.SendEmailAsync(
                     user.Email ?? throw new Exception("Email is null"),
@@ -175,7 +175,7 @@ namespace Application.Services
             }
         }
 
-        public async Task<TResponse> ConfirmEmailAsync(string token, string email)
+        public async Task<TResponse> ConfirmEmailAsync(string token, string email, HttpContext context)
         {
             try
             {
@@ -184,10 +184,13 @@ namespace Application.Services
 
                 var user = await userManager.FindByEmailAsync(email);
                 if (user == null) return TResponse.Failure(404, "User not found");
-                
+
                 var result = await userManager.ConfirmEmailAsync(user, token);
                 
                 if (!result.Succeeded) return TResponse.Failure(500, "Failed to confirm email");
+
+                context.Response.Redirect("https://localhost:7000/");
+
                 return TResponse.Successful("Email confirmed successfully");
             }
             catch (Exception ex)

@@ -10,6 +10,6 @@ namespace Domain.Interfaces.Services.Identity
         Task<TResponse> SigninAsync(SigninDTO signin, HttpContext context);
         Task<TResponse> SignoutAsync(HttpContext context);
         Task<TResponse> RefreshSessionAsync(HttpContext context);
-        Task<TResponse> ConfirmEmailAsync(string token, string email);
+        Task<TResponse> ConfirmEmailAsync(string token, string email, HttpContext context);
     }
 }
