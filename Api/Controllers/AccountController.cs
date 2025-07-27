@@ -52,5 +52,22 @@ namespace Api.Controllers
 
             return BadRequest(result);
         }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO request)
+        {
+            var result = await service.ForgotPasswordAsync(request, HttpContext);
+            return Ok(result); // Always return 200 to prevent email enumeration
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO request)
+        {
+            var result = await service.ResetPasswordAsync(request, HttpContext);
+
+            if (result.Success) return Ok(result);
+
+            return BadRequest(result);
+        }
     }
 }
