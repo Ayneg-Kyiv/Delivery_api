@@ -1,7 +1,5 @@
-using Domain.Models.Identity;
 using Domain.Models.Orders;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Models.Reviews
 {
@@ -10,14 +8,12 @@ namespace Domain.Models.Reviews
         [Key]
         public int Id { get; set; }
 
+        // Логічний зв'язок з ApplicationUser через ID (без FK)
         [Required]
         public Guid UserId { get; set; }
-        [ForeignKey(nameof(UserId))]
-        public ApplicationUser User { get; set; } = null!;
 
         [Required]
         public Guid ShippingOrderId { get; set; }
-        [ForeignKey(nameof(ShippingOrderId))]
         public ShippingOrder ShippingOrder { get; set; } = null!;
 
         [Required]

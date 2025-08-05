@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Models.Orders
 {
@@ -17,8 +16,8 @@ namespace Domain.Models.Orders
         [Required]
         public Guid ShippingOrderId { get; set; }
 
-        [ForeignKey(nameof(ShippingOrderId))]
-        public ShippingOrder ShippingOrder { get; set; } = null!;
+        // Navigation property для FK зв'язку з ShippingOrder
+        public ShippingOrder? ShippingOrder { get; set; }
 
         [Required] public string Country { get; set; } = string.Empty;
         [Required] public string City { get; set; } = string.Empty;

@@ -1,4 +1,3 @@
-using Domain.Models.Identity;
 using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Models.Orders
@@ -11,10 +10,11 @@ namespace Domain.Models.Orders
         public DateTime LastUpdatedAt { get; set; }
 
         public Guid ShippingOrderId { get; set; }
-        public ShippingOrder ShippingOrder { get; set; } = null!;
+        // Removed navigation property - using logical relationship via ID only
+        // public ShippingOrder ShippingOrder { get; set; } = null!;
 
+        // Логічний зв'язок з ApplicationUser через ID (без FK)
         public Guid CourierId { get; set; }
-        public ApplicationUser Courier { get; set; } = null!;
 
         public decimal OfferedPrice { get; set; }
         public DateOnly OfferedDate { get; set; }

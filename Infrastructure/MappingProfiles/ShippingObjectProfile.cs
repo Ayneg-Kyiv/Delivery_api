@@ -1,5 +1,5 @@
 using AutoMapper;
-using Application.DTOs.Orders;
+using Domain.Models.DTOs.Order;
 using Domain.Models.Orders;
 
 namespace Application.MappingProfiles

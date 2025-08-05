@@ -1,4 +1,3 @@
-using Domain.Models.Identity;
 using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Models.Orders
@@ -9,8 +8,8 @@ namespace Domain.Models.Orders
         public DateTime CreatedAt { get; set; }
         public DateTime LastUpdatedAt { get; set; }
 
+        // Логічний зв'язок з ApplicationUser через ID (без FK)
         public Guid CustomerId { get; set; }
-        public ApplicationUser Customer { get; set; } = null!;
 
         public decimal EstimatedCost { get; set; }
         public float EstimatedDistance { get; set; }
@@ -19,5 +18,6 @@ namespace Domain.Models.Orders
 
         public ICollection<ShippingOffer>? Offers { get; set; }
         public ICollection<ShippingObject>? Objects { get; set; }
+        public ICollection<ShippingDestination>? ShippingDestinations { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Domain.Interfaces.Repositories;
 
 namespace Domain.Interfaces.Repositories
 {

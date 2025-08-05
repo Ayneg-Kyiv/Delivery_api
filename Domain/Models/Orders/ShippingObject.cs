@@ -35,8 +35,9 @@ namespace Domain.Models.Orders
         [Required]
         public Guid ShippingOrderId { get; set; }
 
-        [ForeignKey(nameof(ShippingOrderId))]
-        public ShippingOrder ShippingOrder { get; set; } = null!;
+        // Removed FK constraint - using logical relationship via ID only
+        // [ForeignKey(nameof(ShippingOrderId))]
+        // public ShippingOrder ShippingOrder { get; set; } = null!;
 
         public string? ImagePath { get; set; }
     }

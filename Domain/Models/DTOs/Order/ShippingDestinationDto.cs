@@ -1,4 +1,4 @@
-namespace Application.DTOs.Orders
+namespace Domain.Models.DTOs.Order
 {
     public class ShippingDestinationDto
     {

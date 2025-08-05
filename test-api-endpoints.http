@@ -1,0 +1,165 @@
+### Базовий URL
+@baseUrl = http://localhost:5051
+
+### 1. Отримати всі ShippingOrders
+GET {{baseUrl}}/api/ShippingOrder
+
+###
+
+### 2. Отримати ShippingOrder за ID
+GET {{baseUrl}}/api/ShippingOrder/11111111-1111-1111-1111-111111111111
+
+###
+
+### 3. Створити новий ShippingOrder
+POST {{baseUrl}}/api/ShippingOrder
+Content-Type: application/json
+
+{
+  "title": "Доставка нового товару",
+  "description": "Терміново потрібно доставити документи",
+  "price": 250.00,
+  "weight": 2.5,
+  "volume": 0.1,
+  "cargoName": "Документи",
+  "transportationType": 1,
+  "startingPointId": "11111111-1111-1111-1111-111111111111",
+  "destinationLatitude": 50.4547,
+  "destinationLongitude": 30.5238,
+  "destinationAddress": "вул. Хрещатик, 1, Київ",
+  "userId": "11111111-1111-1111-1111-111111111111"
+}
+
+###
+
+### 4. Оновити ShippingOrder
+PUT {{baseUrl}}/api/ShippingOrder/11111111-1111-1111-1111-111111111111
+Content-Type: application/json
+
+{
+  "title": "Оновлена доставка",
+  "description": "Оновлений опис доставки",
+  "price": 300.00,
+  "weight": 3.0,
+  "volume": 0.15,
+  "cargoName": "Оновлений товар",
+  "transportationType": 2,
+  "startingPointId": "11111111-1111-1111-1111-111111111111",
+  "destinationLatitude": 50.4547,
+  "destinationLongitude": 30.5238,
+  "destinationAddress": "вул. Хрещатик, 2, Київ",
+  "userId": "11111111-1111-1111-1111-111111111111"
+}
+
+###
+
+### 5. Видалити ShippingOrder
+DELETE {{baseUrl}}/api/ShippingOrder/22222222-2222-2222-2222-222222222222
+
+###
+
+### === SHIPPING OFFERS ===
+
+### 6. Отримати всі ShippingOffers
+GET {{baseUrl}}/api/ShippingOffer
+
+###
+
+### 7. Отримати ShippingOffer за ID
+GET {{baseUrl}}/api/ShippingOffer/33333333-3333-3333-3333-333333333333
+
+###
+
+### 8. Створити новий ShippingOffer
+POST {{baseUrl}}/api/ShippingOffer
+Content-Type: application/json
+
+{
+  "price": 180.00,
+  "description": "Швидка доставка з гарантією",
+  "estimatedDeliveryTime": "2025-08-01T14:00:00",
+  "shippingOrderId": "11111111-1111-1111-1111-111111111111",
+  "carrierId": "22222222-2222-2222-2222-222222222222"
+}
+
+###
+
+### 9. Оновити ShippingOffer
+PUT {{baseUrl}}/api/ShippingOffer/33333333-3333-3333-3333-333333333333
+Content-Type: application/json
+
+{
+  "price": 200.00,
+  "description": "Оновлена пропозиція доставки",
+  "estimatedDeliveryTime": "2025-08-01T16:00:00",
+  "shippingOrderId": "11111111-1111-1111-1111-111111111111",
+  "carrierId": "22222222-2222-2222-2222-222222222222"
+}
+
+###
+
+### 10. Видалити ShippingOffer
+DELETE {{baseUrl}}/api/ShippingOffer/44444444-4444-4444-4444-444444444444
+
+###
+
+### === SHIPPING OBJECTS ===
+
+### 11. Отримати всі ShippingObjects
+GET {{baseUrl}}/api/ShippingObject
+
+###
+
+### 12. Отримати ShippingObject за ID
+GET {{baseUrl}}/api/ShippingObject/55555555-5555-5555-5555-555555555555
+
+###
+
+### 13. Створити новий ShippingObject
+POST {{baseUrl}}/api/ShippingObject
+Content-Type: application/json
+
+{
+  "name": "Новий товар",
+  "description": "Опис нового товару для доставки",
+  "weight": 1.5,
+  "dimensions": "30x20x10 см",
+  "value": 500.00,
+  "isFragile": true,
+  "shippingOrderId": "11111111-1111-1111-1111-111111111111"
+}
+
+###
+
+### 14. Оновити ShippingObject
+PUT {{baseUrl}}/api/ShippingObject/55555555-5555-5555-5555-555555555555
+Content-Type: application/json
+
+{
+  "name": "Оновлений товар",
+  "description": "Оновлений опис товару",
+  "weight": 2.0,
+  "dimensions": "35x25x15 см",
+  "value": 750.00,
+  "isFragile": false,
+  "shippingOrderId": "11111111-1111-1111-1111-111111111111"
+}
+
+###
+
+### 15. Видалити ShippingObject
+DELETE {{baseUrl}}/api/ShippingObject/66666666-6666-6666-6666-666666666666
+
+###
+
+### === ДОПОЛНИТЕЛЬНЫЕ ТЕСТЫ ===
+
+### 16. Отримати ShippingOffers за ShippingOrderId
+GET {{baseUrl}}/api/ShippingOffer?shippingOrderId=11111111-1111-1111-1111-111111111111
+
+###
+
+### 17. Отримати ShippingObjects за ShippingOrderId
+GET {{baseUrl}}/api/ShippingObject?shippingOrderId=11111111-1111-1111-1111-111111111111
+
+###

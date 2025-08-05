@@ -1,7 +1,5 @@
-using Domain.Models.Identity;
 using Domain.Models.Orders;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Models.Messaging
 {
@@ -10,19 +8,15 @@ namespace Domain.Models.Messaging
         [Key]
         public int Id { get; set; }
 
+        // Логічні зв'язки з ApplicationUser через ID (без FK)
         [Required]
         public Guid SenderId { get; set; }
-        [ForeignKey(nameof(SenderId))]
-        public ApplicationUser Sender { get; set; } = null!;
 
         [Required]
         public Guid ReceiverId { get; set; }
-        [ForeignKey(nameof(ReceiverId))]
-        public ApplicationUser Receiver { get; set; } = null!;
 
         [Required]
         public Guid ShippingOrderId { get; set; }
-        [ForeignKey(nameof(ShippingOrderId))]
         public ShippingOrder ShippingOrder { get; set; } = null!;
 
         [Required]
