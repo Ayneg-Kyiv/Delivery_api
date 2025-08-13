@@ -19,5 +19,8 @@ namespace Domain.Interfaces.Repositories
         Task<bool> AddAsync(T entity, CancellationToken cancellationToken);
         Task<bool> UpdateAsync(T entity, CancellationToken cancellationToken);
         Task<bool> DeleteAsync(T entity, CancellationToken cancellationToken);
+        Task<bool> DeleteBatchAsync(
+            IEnumerable<T> entities,
+            CancellationToken cancellationToken);
     }
 }

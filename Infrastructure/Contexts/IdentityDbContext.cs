@@ -1,9 +1,6 @@
-﻿using Domain.Models.Feedback;
+using Domain.Models.Feedback;
 using Domain.Models.Identity;
-using Domain.Models.Messaging;
-using Domain.Models.Orders;
-using Domain.Models.Reviews;
-using Domain.Models.Vehicles;
+using Infrastructure.Contexts.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -13,23 +10,13 @@ namespace Infrastructure.Contexts
 {
     public class IdentityDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
     {
-        public IdentityDbContext(DbContextOptions<IdentityDbContext> options)
-            : base(options)
-        {
-        }
+        public virtual DbSet<SessionData> Sessions { get; set; }
 
-        public DbSet<SessionData> Sessions { get; set; } = null!;
-       
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // SessionData
-            builder.Entity<SessionData>()
-                .HasIndex(s => s.RefreshToken)
-                .IsUnique();
-
-           
+            builder.SetSessionDataExtension();
         }
     }
 }

@@ -4,18 +4,16 @@ using Domain.Interfaces.Services.Identity;
 using Domain.Models.DTOs;
 using Domain.Models.DTOs.Identity;
 using Domain.Models.Identity;
+using Domain.Validators;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 
 namespace Application.Services
 {
     public class AccountService(UserManager<ApplicationUser> userManager,
-                                RoleManager<IdentityRole<Guid>> roleManager,
-                                ISessionDataService sessionDataService,
                                 IBaseRepository<ApplicationUser> applicationUserRepository,
-                                IBaseRepository<SessionData> sessionDataRepository,
-                                ITokenService tokenService,
-                                IFileService fileService) : IAccountService
+                                IFileService fileService,
+                                IMailService mailService) : IAccountService
     {
         public async Task<TResponse> GetUserDataAsync(HttpContext context, CancellationToken cancellationToken)
         {
@@ -70,7 +68,8 @@ namespace Application.Services
                 var user = await userManager.FindByEmailAsync(changePassword.Email);
                 if (user == null) return TResponse.Failure(404, "User not found");
 
-                (bool isValid, string? errorMessage) = await IsPasswordValid(user, changePassword.NewPassword);
+                (bool isValid, string? errorMessage) = await AccountDataValidator.IsPasswordValid
+                                                            (user, changePassword.NewPassword, userManager);
 
                 if (!isValid)
                     return TResponse.Failure(400, errorMessage ?? "Password is not valid");
@@ -149,9 +148,9 @@ namespace Application.Services
                 // Validate input
                 if (updateProfileImage == null || updateProfileImage.Image == null)
                     return TResponse.Failure(400, "Invalid request data");
-                
+
                 var user = await userManager.FindByEmailAsync(updateProfileImage.Email);
-                
+
                 if (user == null) return TResponse.Failure(404, "User not found");
 
                 var fileName = await fileService.SaveFileAsync(updateProfileImage.Image, cancellationToken);
@@ -179,174 +178,74 @@ namespace Application.Services
             }
         }
 
-        public async Task<TResponse> RefreshSessionAsync(HttpContext context)
+        public async Task<TResponse> ForgotPasswordAsync(ForgotPasswordDTO forgotPassword, HttpContext context)
         {
             try
             {
-                var refreshToken = context.Request.Cookies["refreshToken"];
+                if (forgotPassword == null || string.IsNullOrWhiteSpace(forgotPassword.Email))
+                    return TResponse.Failure(400, "Invalid request data");
 
-                if (string.IsNullOrEmpty(refreshToken)) return TResponse.Failure(401, "No session on this device");
+                var user = await userManager.FindByEmailAsync(forgotPassword.Email);
 
-                var sessionData = await sessionDataRepository.FindAsync
-                    (x => x.RefreshToken == refreshToken, default);
+                if (user == null)
+                    return TResponse.Failure(401, "User not found");
 
-                if (sessionData == null) return TResponse.Failure(401, "No session on this device");
+                var token = await userManager.GeneratePasswordResetTokenAsync(user);
 
-                var user = await userManager.FindByIdAsync
-                    (sessionData.FirstOrDefault()?.UserId.ToString() ?? "");
+                if (string.IsNullOrWhiteSpace(token))
+                    return TResponse.Failure(500, "Failed to generate password reset token");
 
-                if (user == null) return TResponse.Failure(401, "User not found");
+                var resetLink = $"https://localhost:3000/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email!)}";
 
-                var roles = await userManager.GetRolesAsync(user
-                    ?? throw new Exception("User not found"));
+                var result = await mailService.SendEmailAsync(
+                    user.Email ?? throw new Exception("User email is null"),
+                    "Password Reset Request",
+                    $"You requested a password reset. Click the link below to reset your password:\n{resetLink}");
 
-                var newToken = await tokenService.RefreshSessionAsync(user, roles, context);
+                if (!result) return TResponse.Failure(500, "Failed to send password reset email");
 
-                if (string.IsNullOrEmpty(newToken))
-                    return TResponse.Failure(500, "Failed to refresh session");
+                return TResponse.Successful("Password reset email sent successfully");
 
-                return TResponse.Successful(new
-                {
-                    id = user?.Id,
-                    name = user?.UserName,
-                    email = user?.Email,
-                    token = newToken,
-                    roles
-                });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error refreshing session: {ex.Message}");
-                return TResponse.Failure(500, $"An error occurred while refreshing session: {ex.Message}");
+                Console.WriteLine($"Error in ForgotPasswordAsync: {ex.Message}");
+                return TResponse.Failure(500, $"An error occurred while processing the forgot password request: {ex.Message}");
             }
         }
 
-        public async Task<TResponse> SigninAsync(SigninDTO signin, HttpContext context)
+        public async Task<TResponse> ResetPasswordAsync(ResetPasswordDTO resetPassword, HttpContext context)
         {
             try
             {
-                if (!IsValidEmail(signin.Email ?? ""))
-                    return TResponse.Failure(400, "Email is incorrect");
+                if (resetPassword == null || string.IsNullOrWhiteSpace(resetPassword.Email) ||
+                    string.IsNullOrWhiteSpace(resetPassword.Token)
+                    || string.IsNullOrWhiteSpace(resetPassword.NewPassword))
+                    return TResponse.Failure(400, "Invalid request data");
 
-                var user = await userManager.FindByEmailAsync(signin.Email ?? "");
+                var user = await userManager.FindByEmailAsync(resetPassword.Email);
 
-                if (user == null || !await userManager.CheckPasswordAsync(user, signin.Password ?? ""))
-                    return TResponse.Failure(400, "Invalid email or password.");
+                if (user == null) return TResponse.Failure(404, "User not found");
 
-                var roles = await userManager.GetRolesAsync(user);
+                (bool isValid, string? errorMessage) = await AccountDataValidator.IsPasswordValid(user, resetPassword.NewPassword, userManager);
 
-                await tokenService.GetRefreshTokenAsync(user, roles, context);
+                if (!isValid) return TResponse.Failure(400, errorMessage);
 
-                var handledToken = await tokenService.GetTokenAsync(user, roles);
+                var result = await userManager.ResetPasswordAsync(user, resetPassword.Token, resetPassword.NewPassword);
 
-                return TResponse.Successful(new
+                if (!result.Succeeded)
                 {
-                    id = user.Id,
-                    name = user.UserName,
-                    email = user.Email,
-                    token = handledToken,
-                    roles,
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error signing in: {ex.Message}");
-                return TResponse.Failure(500, $"An error occurred while signing in: {ex.Message}");
-            }
-        }
-
-        public async Task<TResponse> SignoutAsync(HttpContext context)
-        {
-            try
-            {
-                if (!await sessionDataService.IsSessionExistsAsync(context))
-                    return TResponse.Failure(401, "No session on this device");
-
-                await sessionDataService.RemoveSessionAsync(context);
-
-                //clean all cookies
-                if (context.Request.Cookies != null)
-                {
-                    foreach (var cookie in context.Request.Cookies.Keys)
-                        context.Response.Cookies.Delete(cookie);
+                    var errorMsg = string.Join("; ", result.Errors.Select(e => e.Description));
+                    return TResponse.Failure(400, $"Failed to reset password: {errorMsg}");
                 }
 
-                return TResponse.Successful("Signed out successfully");
+                return TResponse.Successful("Password reset successfully");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error signing out: {ex.Message}");
-                return TResponse.Failure(500, $"An error occurred while signing out: {ex.Message}");
+                Console.WriteLine($"Error in ResetPasswordAsync: {ex.Message}");
+                return TResponse.Failure(500, $"An error occurred while resetting the password: {ex.Message}");
             }
-        }
-
-        public async Task<TResponse> SignupAsync(SignupDTO signup, HttpContext context)
-        {
-            try
-            {
-                if (!IsValidEmail(signup.Email ?? "")) return TResponse.Failure(400, "Email is incorrect");
-
-                var existingUser = await userManager.FindByEmailAsync(signup.Email ?? "");
-
-                if (existingUser != null) return TResponse.Failure(400, "User already exists");
-
-                var user = new ApplicationUser()
-                {
-                    UserName = signup.Email,
-                    Email = signup.Email
-                };
-
-                (bool isValid, string? errorMessage) = await IsPasswordValid(user, signup.Password ?? "");
-
-                if (!isValid) return TResponse.Failure(400, errorMessage ?? "Password is not valid");
-
-                var account = await userManager.CreateAsync(user, signup.Password ?? "");
-
-                if (!account.Succeeded) return TResponse.Failure(500, "Something went wrong");
-
-                if (!await roleManager.RoleExistsAsync("User"))
-                {
-                    var roleResult = await roleManager.CreateAsync(new IdentityRole<Guid>("User"));
-
-                    if (!roleResult.Succeeded) return TResponse.Failure(500, "Something went wrong");
-                }
-
-                await userManager.AddToRoleAsync(user, "User");
-
-                return TResponse.Successful("Success");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error signing up: {ex.Message}");
-                return TResponse.Failure(500, $"An error occurred while signing up: {ex.Message}");
-            }
-        }
-
-        private static bool IsValidEmail(string email)
-        {
-            try
-            {
-                return (new System.Net.Mail.MailAddress(email).Address == email);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private async Task<(bool isValid, string? ErrorMessage)> IsPasswordValid
-            (ApplicationUser user, string password)
-        {
-            var validators = userManager.PasswordValidators;
-
-            foreach (var validator in validators)
-            {
-                var result = await validator.ValidateAsync(userManager, user, password);
-
-                if (!result.Succeeded) return (false, result.Errors.FirstOrDefault()?.Description);
-            }
-
-            return (true, null);
         }
     }
 }

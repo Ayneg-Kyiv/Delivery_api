@@ -43,6 +43,22 @@ namespace Infrastructure.Repositories
             }
         }
 
+        public async Task<bool> DeleteBatchAsync(IEnumerable<T> entities, CancellationToken cancellationToken)
+        {
+            try
+            {
+                _dbSet.RemoveRange(entities);
+                // Save changes asynchronously and return true if successful
+                return await _context.SaveChangesAsync(cancellationToken) > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting batch of entities: {ex.Message}");
+                // Log the exception or handle it as needed
+                return false;
+            }
+        }
+
         public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken)
         {
             try

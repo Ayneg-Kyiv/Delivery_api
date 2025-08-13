@@ -22,7 +22,7 @@
         {
             return new TResponse
             {
-                StatusCode = statusCode,
+                StatusCode = statusCode,    
                 Success = false,
                 Message = message ?? "Operation failed.",
                 Data = data

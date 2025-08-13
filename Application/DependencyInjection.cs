@@ -18,6 +18,7 @@ namespace Application
             services.AddAutoMapper(typeof(DependencyInjection).Assembly, typeof(Infrastructure.DependencyInjection).Assembly);
 
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<ISessionDataService, SessionDataService>();
             services.AddScoped<IFileService, FileService>();

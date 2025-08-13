@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-
+using System.Text.Json.Serialization;
 
 namespace Domain.Models.Identity
 {
@@ -36,6 +36,9 @@ namespace Domain.Models.Identity
         [Range(0, 5, ErrorMessage = "Rating must be between 0 and 5.")]
         public float Rating { get; set; } = 0;
 
-        public ICollection<Vehicle>? Vehicles { get; set; }
+        [JsonPropertyName("createdat")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public virtual IEnumerable<SessionData>? Sessions { get; set; }
     }
 }
