@@ -1,21 +1,22 @@
-using Domain.Models.DTOs.Order;
-using Domain.Models.Orders;
+using AutoMapper;
 using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services;
-using AutoMapper;
-using System.Threading;
-using System.Threading.Tasks;
+using Domain.Models.DTOs.Order;
+using Domain.Models.Orders;
+using Infrastructure.Contexts;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Application.Services
 {
     public class ShippingOrderService : IShippingOrderService
     {
-        private readonly IBaseRepository<ShippingOrder> _repository;
+        private readonly IBaseRepository<ShippingOrder, ShippingDbContext> _repository;
         private readonly IMapper _mapper;
 
-        public ShippingOrderService(IBaseRepository<ShippingOrder> repository, IMapper mapper)
+        public ShippingOrderService(IBaseRepository<ShippingOrder, ShippingDbContext> repository, IMapper mapper)
         {
             _repository = repository;
             _mapper = mapper;

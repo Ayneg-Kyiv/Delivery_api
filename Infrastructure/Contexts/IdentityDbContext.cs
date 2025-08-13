@@ -8,7 +8,8 @@ using System;
 
 namespace Infrastructure.Contexts
 {
-    public class IdentityDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
+    public class IdentityDbContext(DbContextOptions<IdentityDbContext> options)
+    : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid> (options)
     {
         public virtual DbSet<SessionData> Sessions { get; set; }
 

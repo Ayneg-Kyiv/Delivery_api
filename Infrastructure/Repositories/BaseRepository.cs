@@ -5,10 +5,10 @@ using System.Linq.Expressions;
 
 namespace Infrastructure.Repositories
 {
-    public class BaseRepository<T, TContext>(TContext context)
-    : IBaseRepository<T> where T : class where TContext : DbContext
+    public class BaseRepository<T, DbT>(DbT context)
+        : IBaseRepository<T, DbT> where T : class where DbT : DbContext
     {
-        private readonly TContext _context = context;
+        private readonly DbT _context = context;
         private readonly DbSet<T> _dbSet = context.Set<T>();
 
         public async Task<bool> AddAsync(T entity, CancellationToken cancellationToken)

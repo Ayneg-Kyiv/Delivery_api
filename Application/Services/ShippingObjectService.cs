@@ -7,15 +7,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using Infrastructure.Contexts;
 
 namespace Application.Services
 {
     public class ShippingObjectService : IShippingObjectService
     {
-        private readonly IBaseRepository<ShippingObject> _repository;
+        private readonly IBaseRepository<ShippingObject, ShippingDbContext> _repository;
         private readonly IMapper _mapper;
 
-        public ShippingObjectService(IBaseRepository<ShippingObject> repository, IMapper mapper)
+        public ShippingObjectService(IBaseRepository<ShippingObject, ShippingDbContext> repository, IMapper mapper)
         {
             _repository = repository;
             _mapper = mapper;

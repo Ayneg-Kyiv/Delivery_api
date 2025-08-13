@@ -5,6 +5,7 @@ using Domain.Models.DTOs;
 using Domain.Models.DTOs.Identity;
 using Domain.Models.Identity;
 using Domain.Validators;
+using Infrastructure.Contexts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 
@@ -13,7 +14,7 @@ namespace Application.Services
     public class AuthService(UserManager<ApplicationUser> userManager,
                              RoleManager<IdentityRole<Guid>> roleManager,
                              ISessionDataService sessionDataService,
-                             IBaseRepository<SessionData> sessionDataRepository,
+                             IBaseRepository<SessionData, IdentityDbContext> sessionDataRepository,
                              ITokenService tokenService,
                              IMailService mailService) : IAuthService
     {

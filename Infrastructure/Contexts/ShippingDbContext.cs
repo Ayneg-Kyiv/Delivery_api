@@ -7,13 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using System;
 namespace Infrastructure.Contexts
 {
-    public class ShippingDbContext : DbContext
+    public class ShippingDbContext(DbContextOptions<ShippingDbContext> options) 
+        : DbContext(options)
     {
-        public ShippingDbContext(DbContextOptions<ShippingDbContext> options)
-            : base(options)
-        {
-        }
-
         public DbSet<Vehicle> Vehicles { get; set; } = null!;
         public DbSet<ShippingOrder> ShippingOrders { get; set; } = null!;
         public DbSet<ShippingOffer> ShippingOffers { get; set; } = null!;

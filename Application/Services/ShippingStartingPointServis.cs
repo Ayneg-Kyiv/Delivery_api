@@ -1,21 +1,22 @@
 // filepath: c:\Users\stas_\Desktop\STEP\PROJ\Delivery_api\Application\Services\ShippingStartingPointServis.cs
+using AutoMapper;
+using Domain.Interfaces.Repositories;
 using Domain.Models.DTOs.Order;
 using Domain.Models.Orders;
-using Domain.Interfaces.Repositories;
-using System.Threading;
-using System.Threading.Tasks;
+using Infrastructure.Contexts;
 using System.Collections.Generic;
 using System.Linq;
-using AutoMapper;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Application.Services
 {
     public class ShippingStartingPointService
     {
-        private readonly IBaseRepository<ShippingStartingPoint> _repository;
+        private readonly IBaseRepository<ShippingStartingPoint, ShippingDbContext> _repository;
         private readonly IMapper _mapper;
 
-        public ShippingStartingPointService(IBaseRepository<ShippingStartingPoint> repository, IMapper mapper)
+        public ShippingStartingPointService(IBaseRepository<ShippingStartingPoint, ShippingDbContext> repository, IMapper mapper)
         {
             _repository = repository;
             _mapper = mapper;

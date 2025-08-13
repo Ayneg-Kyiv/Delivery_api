@@ -3,16 +3,17 @@ using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services;
 using Domain.Models.DTOs.Order;
 using Domain.Models.Orders;
+using Infrastructure.Contexts;
 using System.Linq;
 
 namespace Application.Services
 {
     public class ShippingDestinationService : IShippingDestinationService
     {
-        private readonly IBaseRepository<ShippingDestination> _repository;
+        private readonly IBaseRepository<ShippingDestination, ShippingDbContext> _repository;
         private readonly IMapper _mapper;
 
-        public ShippingDestinationService(IBaseRepository<ShippingDestination> repository, IMapper mapper)
+        public ShippingDestinationService(IBaseRepository<ShippingDestination, ShippingDbContext> repository, IMapper mapper)
         {
             _repository = repository;
             _mapper = mapper;
