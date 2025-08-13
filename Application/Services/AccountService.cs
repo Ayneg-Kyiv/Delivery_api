@@ -21,14 +21,31 @@ namespace Application.Services
         {
             try
             {
+                // Спочатку спробуємо знайти email в JwtRegisteredClaimNames.Email (стандартний JWT claim)
                 var email = context.User.Claims
-                    .FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
+                    .FirstOrDefault(c => c.Type == "email")?.Value;
+
+                // Якщо не знайдено, спробуємо в ClaimTypes.Email
+                if (string.IsNullOrWhiteSpace(email))
+                {
+                    email = context.User.Claims
+                        .FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
+                }
+
+                Console.WriteLine($"GetUserDataAsync - Email from claims: {email}");
 
                 if (string.IsNullOrWhiteSpace(email))
                     return TResponse.Failure(401, "No session on this device");
 
-                var user = await applicationUserRepository.FindAsync
-                    (x => x.Email == email, cancellationToken);
+                // Використовуємо UserManager замість репозиторію для обходу кешування
+                var user = await userManager.FindByEmailAsync(email);
+
+                Console.WriteLine($"User found via UserManager: {user != null}");
+                if (user != null)
+                {
+                    Console.WriteLine($"User FirstName: '{user.FirstName}', LastName: '{user.LastName}', MiddleName: '{user.MiddleName}'");
+                    Console.WriteLine($"User Email: '{user.Email}', Id: '{user.Id}'");
+                }
 
                 return TResponse.Successful(user);
             }

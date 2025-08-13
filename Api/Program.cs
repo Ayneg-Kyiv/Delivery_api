@@ -99,6 +99,27 @@ builder.Services.AddAuthentication(options =>
             ClockSkew = TimeSpan.FromMinutes(1),
             RequireExpirationTime = true
         };
+
+        // Додаємо логування для JWT
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine($"JWT Authentication failed: {context.Exception.Message}");
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                Console.WriteLine($"JWT Token validated for user: {context.Principal?.Identity?.Name}");
+                return Task.CompletedTask;
+            },
+            OnMessageReceived = context =>
+            {
+                var tokenLength = context.Token?.Length ?? 0;
+                Console.WriteLine($"JWT Token received: {context.Token?.Substring(0, Math.Min(20, tokenLength))}...");
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, DynamicPolicyProvider>();
@@ -123,13 +144,10 @@ if (app.Environment.IsDevelopment())
 
     app.UseCors(options =>
     {
-        options.WithOrigins("https://localhost:3000")
-            .AllowAnyOrigin()
+        options.WithOrigins("https://localhost:3000", "http://localhost:3000")
               .AllowAnyHeader()
-              .AllowAnyMethod();
-            //   .AllowAnyOrigin()
-            //   .AllowAnyHeader()
-            //   .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 }
 
@@ -154,7 +172,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
  // Temporarily disabled for testing
-app.UseCsrfProtection();
+//app.UseCsrfProtection();
 
 app.UseHttpsRedirection();
 
