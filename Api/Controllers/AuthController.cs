@@ -58,5 +58,13 @@ namespace Api.Controllers
 
             return BadRequest(result);
         }
+
+        [HttpGet("check-is-email-exists/{email}")]
+        public async Task<IActionResult> CheckIsEmailExists([FromRoute]string email)
+        {
+            var result = await authService.CheckIsUserExists(email);
+
+             return Ok(result);
+        }
     }
 }
