@@ -39,6 +39,16 @@ namespace Api.Controllers
             return BadRequest(result);
         }
 
+        [HttpGet("resend-confirmation-email/{email}")]
+        public async Task<IActionResult> ResendConfirmationEmail([FromRoute] string email)
+        {
+            var result = await authService.ResendEmailConfirmationAsync(email);
+            
+            if (result.Success) return Ok(result);
+            
+            return BadRequest(result);
+        }
+
         [HttpPost("signout")]
         public async Task<IActionResult> Signout()
         {
