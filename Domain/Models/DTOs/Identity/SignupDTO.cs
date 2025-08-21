@@ -11,5 +11,12 @@ namespace Domain.Models.DTOs.Identity
         [Required(ErrorMessage = "Password is required.")]
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
         public string Password { get; set; } = null!;
+
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+
+        public DateOnly? BirthDate { get; set; }
+
+        public string? PhoneNumber { get; set; }
     }
 }

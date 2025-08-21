@@ -75,7 +75,7 @@ namespace Application.Services
 
                 var roles = await userManager.GetRolesAsync(user);
 
-                await tokenService.GetRefreshTokenAsync(user, roles, context);
+                await tokenService.GetRefreshTokenAsync(user, roles, context, signin.RememberMe);
 
                 var handledToken = await tokenService.GetTokenAsync(user, roles);
 
@@ -134,7 +134,11 @@ namespace Application.Services
                 var user = new ApplicationUser()
                 {
                     UserName = signup.Email,
-                    Email = signup.Email
+                    Email = signup.Email,
+                    FirstName = signup.FirstName,
+                    LastName = signup.LastName,
+                    DateOfBirth = signup.BirthDate,
+                    PhoneNumber = signup.PhoneNumber
                 };
 
                 (bool isValid, string? errorMessage) = await AccountDataValidator.IsPasswordValid
@@ -186,7 +190,7 @@ namespace Application.Services
                 if (user == null) return TResponse.Failure(404, "User not found");
 
                 var result = await userManager.ConfirmEmailAsync(user, token);
-                
+
                 if (!result.Succeeded) return TResponse.Failure(500, "Failed to confirm email");
 
                 context.Response.Redirect("https://localhost:7000/");
@@ -197,6 +201,54 @@ namespace Application.Services
             {
                 Console.WriteLine($"Error confirming email: {ex.Message}");
                 return TResponse.Failure(500, $"An error occurred while confirming email: {ex.Message}");
+            }
+        }
+
+        public async Task<TResponse> ResendConfirmationEmailAsync(string email)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(email))
+                    return TResponse.Failure(400, "Email is required");
+
+                var user = await userManager.FindByEmailAsync(email);
+                if (user == null) return TResponse.Failure(404, "User not found");
+                
+                var confirmationToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
+                
+                var confirmationLink = $"https://localhost:3000/confirm-email?token={Uri.EscapeDataString(confirmationToken)}&email={Uri.EscapeDataString(user.Email!)}";
+                
+                await mailService.SendEmailAsync(
+                    user.Email ?? throw new Exception("Email is null"),
+                    "Resend Email Confirmation",
+                    $"Please confirm your email by clicking this link: <a href=\"{confirmationLink}\">Confirm Email</a>");
+                
+                return TResponse.Successful("Confirmation email sent successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error resending confirmation email: {ex.Message}");
+                
+                return TResponse.Failure(500, $"An error occurred while resending confirmation email: {ex.Message}");
+            }
+        }
+
+        public async Task<TResponse> CheckIsUserExists(string email)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(email))
+                    return TResponse.Failure(400, "Email is required");
+
+                var user = await userManager.FindByEmailAsync(email);
+                if (user == null) return TResponse.Failure(404, "User not found");
+
+                return TResponse.Successful(new { exists = true });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking user existence: {ex.Message}");
+                return TResponse.Failure(500, $"An error occurred while checking user existence: {ex.Message}");
             }
         }
     }

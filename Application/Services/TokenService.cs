@@ -12,7 +12,7 @@ namespace Application.Services
     public class TokenService(ISessionDataService sessionDataService,
                               IConfiguration configuration) : ITokenService
     {
-        public async Task GetRefreshTokenAsync(ApplicationUser user, IEnumerable<string> roles, HttpContext context)
+        public async Task GetRefreshTokenAsync(ApplicationUser user, IEnumerable<string> roles, HttpContext context, bool rememberMe)
         {
             try
             {
@@ -44,13 +44,14 @@ namespace Application.Services
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.None,
-                    Expires = DateTime.UtcNow.AddDays(
-                        double.Parse(configuration["Jwt:RefreshTokenExpiryDays"] ?? ""))
+                    Expires = (rememberMe ? DateTime.UtcNow.AddDays(double.Parse(configuration["Jwt:RefreshTokenExpiryDays"] ?? "30")) 
+                        : DateTime.UtcNow.AddMinutes(double.Parse(configuration["Jwt:RefreshTokenExpiryMinutes"] ?? "60")))
                 };
 
                 var oldRefreshToken = context.Request.Cookies["refreshToken"];
 
-                if (!string.IsNullOrEmpty(oldRefreshToken))
+
+                if (!string.IsNullOrEmpty(oldRefreshToken) && await sessionDataService.IsSessionExistsAsync(context))
                 {
                     await sessionDataService.UpdateSessionRefreshTokenAsync(oldRefreshToken, handledRefreshToken);
                     context.Response.Cookies.Delete("refreshToken");
@@ -112,7 +113,9 @@ namespace Application.Services
                     return string.Empty;
                 else
                 {
-                    await GetRefreshTokenAsync(user, roles, context);
+                    bool rememberMe = context.Request.Cookies.ContainsKey("rememberMe") &&
+                        bool.TryParse(context.Request.Cookies["rememberMe"], out var result) && result;
+                    await GetRefreshTokenAsync(user, roles, context, rememberMe);
                     return await GetTokenAsync(user, roles);
                 }
             }
