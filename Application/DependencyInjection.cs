@@ -1,4 +1,5 @@
 ﻿using Application.Services;
+using AutoMapper;
 using Domain.Interfaces.Services;
 using Domain.Interfaces.Services.Identity;
 using Infrastructure;
@@ -13,11 +14,19 @@ namespace Application
         {
             services.AddInfrastructure(configuration);
 
+            // Додаємо AutoMapper
+            services.AddAutoMapper(typeof(DependencyInjection).Assembly, typeof(Infrastructure.DependencyInjection).Assembly);
+
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<ISessionDataService, SessionDataService>();
             services.AddScoped<IFileService, FileService>();
+            services.AddScoped<ShippingStartingPointService>();
+            services.AddScoped<IShippingOrderService, ShippingOrderService>();
+            services.AddScoped<IShippingOfferService, ShippingOfferService>();
+            services.AddScoped<IShippingObjectService, ShippingObjectService>();
+            services.AddScoped<IShippingDestinationService, ShippingDestinationService>();
 
             return services;
         }

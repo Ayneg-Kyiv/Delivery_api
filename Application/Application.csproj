@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk;Microsoft.NET.Sdk.Publish">
 
   <PropertyGroup>
+    <!-- <TargetFramework>net9.0</TargetFramework> -->
     <TargetFramework>net9.0</TargetFramework>
+
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -9,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Antiforgery" Version="2.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.3.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting.WindowsServices" Version="9.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting.WindowsServices" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>

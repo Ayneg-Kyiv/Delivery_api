@@ -1,13 +1,15 @@
-﻿using Domain.Models.Identity;
+using Domain.Models.Feedback;
+using Domain.Models.Identity;
 using Infrastructure.Contexts.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace Infrastructure.Contexts
 {
     public class IdentityDbContext(DbContextOptions<IdentityDbContext> options)
-        : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
+    : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid> (options)
     {
         public virtual DbSet<SessionData> Sessions { get; set; }
 

@@ -5,13 +5,14 @@ using Domain.Models.DTOs;
 using Domain.Models.DTOs.Identity;
 using Domain.Models.Identity;
 using Domain.Validators;
+using Infrastructure.Contexts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 
 namespace Application.Services
 {
     public class AccountService(UserManager<ApplicationUser> userManager,
-                                IBaseRepository<ApplicationUser> applicationUserRepository,
+                                IBaseRepository<ApplicationUser, IdentityDbContext> applicationUserRepository,
                                 IFileService fileService,
                                 IMailService mailService) : IAccountService
     {

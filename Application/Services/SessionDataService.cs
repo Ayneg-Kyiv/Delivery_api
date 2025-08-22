@@ -1,11 +1,12 @@
 ﻿using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services.Identity;
 using Domain.Models.Identity;
+using Infrastructure.Contexts;
 using Microsoft.AspNetCore.Http;
 
 namespace Application.Services
 {
-    public class SessionDataService(IBaseRepository<SessionData> sessionRepository)
+    public class SessionDataService(IBaseRepository<SessionData, IdentityDbContext> sessionRepository)
         : ISessionDataService
     {
         public async Task AddSessionAsync(HttpContext context, string token, Guid userId)

@@ -1,8 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System.Data.Common;
+using System.Linq.Expressions;
+using Domain.Interfaces.Repositories;
 
 namespace Domain.Interfaces.Repositories
 {
-    public interface IBaseRepository<T> where T : class
+    public interface IBaseRepository<T, DbT> where T : class
     {
         Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken);
         Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate,

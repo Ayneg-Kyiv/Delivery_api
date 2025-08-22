@@ -3,6 +3,7 @@ using Api.Providers;
 using Application;
 using Application.Middleware;
 using Domain.Models.Identity;
+using Infrastructure;
 using Infrastructure.Contexts;
 using Infrastructure.Seeds;
 using System.Text;
@@ -11,16 +12,29 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+using Domain.Options;
+using Application.Services;
+using Microsoft.EntityFrameworkCore;
+using Infrastructure.Repositories;
+using Domain.Interfaces.Repositories;
+using Domain.Models.Orders;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+builder.Services.Configure<ConnectionStringOptions>(
+    builder.Configuration.GetSection("ConnectionStringOptions"));
 
 // Add services to the container.
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// builder.Services.AddOpenApi(); // Removed because AddOpenApi does not exist; AddSwaggerGen is used instead.
 
 builder.Services.AddCors();
+
+builder.Services.AddInfrastructure(builder.Configuration);
+
 
 builder.Services.AddSwaggerGen();
 
@@ -97,7 +111,8 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 
     app.UseStaticFiles(new StaticFileOptions()
     {
@@ -108,14 +123,11 @@ if (app.Environment.IsDevelopment())
 
     app.UseCors(options =>
     {
-        options.WithOrigins("https://localhost:3000")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+        options.WithOrigins("https://localhost:3000", "http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
-
-    app.UseSwagger();
-    app.UseSwaggerUI();
 }
 
 using (var scope = app.Services.CreateScope())
@@ -128,14 +140,18 @@ using (var scope = app.Services.CreateScope())
 
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         await ApplicationUserSeed.SeedUserAsync(userManager);
+
+        // Додаємо Seed для ShippingOrder
+        var shippingDbContext = services.GetRequiredService<ShippingDbContext>();
+        await ShippingOrderSeed.SeedAsync(shippingDbContext);
     }
     catch (Exception ex)
     {
         Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
     }
 }
-
-app.UseCsrfProtection();
+ // Temporarily disabled for testing
+//app.UseCsrfProtection();
 
 app.UseHttpsRedirection();
 

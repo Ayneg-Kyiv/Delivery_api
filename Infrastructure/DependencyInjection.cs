@@ -21,11 +21,18 @@ namespace Infrastructure
 
             services.AddDbContext<IdentityDbContext>((provider, options) =>
             {
+
                 options.UseSqlServer(provider.GetRequiredService
                     <IOptionsSnapshot<ConnectionStringOptions>>().Value.IdentityDbConnection);
             });
 
-            services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
+            services.AddDbContext<ShippingDbContext>((provider, options) =>
+            {
+                options.UseSqlServer(provider.GetRequiredService
+                    <IOptionsSnapshot<ConnectionStringOptions>>().Value.ApplicationDbConnection);
+            });
+
+            services.AddScoped(typeof(IBaseRepository<,>), typeof(BaseRepository<,>));
             services.AddScoped<IMailService, MailTrapService>();
 
             return services;

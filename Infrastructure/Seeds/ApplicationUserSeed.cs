@@ -33,6 +33,9 @@ namespace Infrastructure.Seeds
                     PhoneNumber = "1234567890",
                     PhoneNumberConfirmed = true,
                     LockoutEnabled = false,
+                    FirstName = "Олександр",
+                    LastName = "Коваленко",
+                    MiddleName = "Сергійович"
                 };
 
                 var hasher = new PasswordHasher<ApplicationUser>();
@@ -48,6 +51,14 @@ namespace Infrastructure.Seeds
                 }
 
             }
+            else
+            {
+                // Always update existing admin with personal data
+                adminUser.FirstName = "Олександр";
+                adminUser.LastName = "Коваленко";
+                adminUser.MiddleName = "Сергійович";
+                await userManager.UpdateAsync(adminUser);
+            }
 
             var defaultUser = await userManager.FindByEmailAsync("default@i.ua");
 
@@ -55,25 +66,36 @@ namespace Infrastructure.Seeds
             {
                 defaultUser = new ApplicationUser
                 {
-                    UserName = "defaultUser@i.ua",
-                    NormalizedUserName = "DEFAULTUSER@I.UA",
-                    Email = "defaultUser@i.ua",
-                    NormalizedEmail = "DEFAULTUSER@I.UA",
+                    UserName = "default@i.ua",
+                    NormalizedUserName = "DEFAULT@I.UA",
+                    Email = "default@i.ua",
+                    NormalizedEmail = "DEFAULT@I.UA",
                     EmailConfirmed = true,
                     PhoneNumber = "0987654321",
                     PhoneNumberConfirmed = true,
                     LockoutEnabled = false,
+                    FirstName = "Іван",
+                    LastName = "Петренко",
+                    MiddleName = "Миколайович"
                 };
 
                 var hasher = new PasswordHasher<ApplicationUser>();
-                defaultUser.PasswordHash = hasher.HashPassword(defaultUser, "defaultUser_123");
+                defaultUser.PasswordHash = hasher.HashPassword(defaultUser, "Default_123");
 
                 var result = await userManager.CreateAsync(defaultUser);
 
                 if (result.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(adminUser, "Admin");
+                    await userManager.AddToRoleAsync(defaultUser, "User");
                 }
+            }
+            else
+            {
+                // Always update existing user with personal data
+                defaultUser.FirstName = "Іван";
+                defaultUser.LastName = "Петренко";
+                defaultUser.MiddleName = "Миколайович";
+                await userManager.UpdateAsync(defaultUser);
             }
         }
     }
