@@ -11,5 +11,8 @@ namespace Domain.Interfaces.Services.Identity
         Task<TResponse> SignoutAsync(HttpContext context);
         Task<TResponse> RefreshSessionAsync(HttpContext context);
         Task<TResponse> ConfirmEmailAsync(string token, string email, HttpContext context);
+        Task<TResponse> ResendEmailConfirmationAsync(string email);
+        // Additional Functions
+        Task<TResponse> CheckIsUserExists(string email);
     }
 }
