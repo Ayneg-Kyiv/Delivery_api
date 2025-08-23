@@ -42,7 +42,7 @@ namespace Api.Controllers
         [HttpGet("resend-confirmation-email/{email}")]
         public async Task<IActionResult> ResendConfirmationEmail([FromRoute] string email)
         {
-            var result = await authService.ResendEmailConfirmationAsync(email);
+            var result = await authService.ResendConfirmationEmailAsync(email);
             
             if (result.Success) return Ok(result);
             
