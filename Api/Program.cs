@@ -3,21 +3,16 @@ using Api.Providers;
 using Application;
 using Application.Middleware;
 using Domain.Models.Identity;
+using Domain.Options;
 using Infrastructure;
 using Infrastructure.Contexts;
 using Infrastructure.Seeds;
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
-using Domain.Options;
-using Application.Services;
-using Microsoft.EntityFrameworkCore;
-using Infrastructure.Repositories;
-using Domain.Interfaces.Repositories;
-using Domain.Models.Orders;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,7 +28,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddCors();
 
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication(builder.Configuration);
 
 
 builder.Services.AddSwaggerGen();
@@ -104,7 +99,6 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, DynamicPolicyProvider>();
 builder.Services.AddSingleton<IAuthorizationHandler, DynamicRoleHandler>();
 
-builder.Services.AddApplication(builder.Configuration);
 
 var app = builder.Build();
 
@@ -150,8 +144,8 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
     }
 }
- // Temporarily disabled for testing
-//app.UseCsrfProtection();
+
+app.UseCsrfProtection();
 
 app.UseHttpsRedirection();
 

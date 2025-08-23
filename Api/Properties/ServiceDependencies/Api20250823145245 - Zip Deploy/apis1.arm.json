@@ -97,11 +97,11 @@
               "type": "Microsoft.ApiManagement/service/apis",
               "name": "DlvrApi/Api",
               "properties": {
-                "displayName": "Api",
+                "displayName": "Api | v1",
                 "apiRevision": "1",
                 "description": null,
                 "subscriptionRequired": true,
-                "serviceUrl": null,
+                "serviceUrl": "https://deliveryapi-asb8g2dpbfdpcmfh.westeurope-01.azurewebsites.net",
                 "path": "",
                 "protocols": [
                   "https"
