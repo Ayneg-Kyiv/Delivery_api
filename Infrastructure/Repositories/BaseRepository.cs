@@ -96,6 +96,11 @@ namespace Infrastructure.Repositories
             }
         }
 
+        public Task<IEnumerable<T>> FindWithIncludesAndPaginationAsync(Expression<Func<T, bool>> predicate, int pageNumber, int pageSize, CancellationToken cancellationToken, params Expression<Func<T, object>>[] includes)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken, params Expression<Func<T, object>>[] includes)
         {
             try
@@ -129,6 +134,35 @@ namespace Infrastructure.Repositories
                 // Log the exception or handle it as needed
                 return [];
             }
+        }
+
+        public async Task<(int TotalCount, int TotalPages)> GetTotalCountAndPagesAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken, int pageSize, params Expression<Func<T, object>>[] includes)
+        {
+            try
+            {
+                IQueryable<T> query = _dbSet.Where(predicate);
+
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+
+                var totalCount = await query.CountAsync(cancellationToken);
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+                
+                return (totalCount, totalPages);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calculating total count and pages: {ex.Message}");
+                // Log the exception or handle it as needed
+                return (0, 0);
+            }
+        }
+
+        public Task<(int TotalCount, int TotalPages)> GetTotalCountAndPagesAsync(Expression<Func<T, bool>> predicate, int pageSize, CancellationToken cancellationToken, params Expression<Func<T, object>>[] includes)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<bool> UpdateAsync(T entity, CancellationToken cancellationToken)

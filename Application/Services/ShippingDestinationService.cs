@@ -4,7 +4,6 @@ using Domain.Interfaces.Services;
 using Domain.Models.DTOs.Order;
 using Domain.Models.Orders;
 using Infrastructure.Contexts;
-using System.Linq;
 
 namespace Application.Services
 {

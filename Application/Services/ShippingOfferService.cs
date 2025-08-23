@@ -1,12 +1,8 @@
-using Domain.Models.DTOs.Order;
-using Domain.Models.Orders;
+using AutoMapper;
 using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services;
-using AutoMapper;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
+using Domain.Models.DTOs.Order;
+using Domain.Models.Orders;
 using Infrastructure.Contexts;
 
 namespace Application.Services
@@ -93,10 +89,10 @@ namespace Application.Services
         }
 
         public async Task<IEnumerable<ShippingOfferDto>> GetWithPaginationAsync(
-            int pageNumber, 
-            int pageSize, 
-            Guid? shippingOrderId, 
-            Guid? courierId, 
+            int pageNumber,
+            int pageSize,
+            Guid? shippingOrderId,
+            Guid? courierId,
             CancellationToken cancellationToken)
         {
             var entities = await _repository.FindAsync(

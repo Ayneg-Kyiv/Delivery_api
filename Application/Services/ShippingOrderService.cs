@@ -4,10 +4,6 @@ using Domain.Interfaces.Services;
 using Domain.Models.DTOs.Order;
 using Domain.Models.Orders;
 using Infrastructure.Contexts;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -84,43 +80,43 @@ namespace Application.Services
         }
 
         public async Task<IEnumerable<ShippingOrderDto>> GetWithIncludesAsync(
-            Guid? customerId, 
+            Guid? customerId,
             CancellationToken cancellationToken)
         {
-            var entities = customerId.HasValue 
+            var entities = customerId.HasValue
                 ? await _repository.FindWithIncludesAsync(
-                    x => x.CustomerId == customerId.Value, 
+                    x => x.CustomerId == customerId.Value,
                     cancellationToken,
-                    x => x.Offers!, 
+                    x => x.Offers!,
                     x => x.Objects!)
                 : await _repository.FindWithIncludesAsync(
-                    x => true, 
+                    x => true,
                     cancellationToken,
-                    x => x.Offers!, 
+                    x => x.Offers!,
                     x => x.Objects!);
 
             return _mapper.Map<IEnumerable<ShippingOrderDto>>(entities);
         }
 
         public async Task<IEnumerable<ShippingOrderDto>> GetWithPaginationAsync(
-            int pageNumber, 
-            int pageSize, 
-            Guid? customerId, 
+            int pageNumber,
+            int pageSize,
+            Guid? customerId,
             CancellationToken cancellationToken)
         {
             var entities = customerId.HasValue
                 ? await _repository.FindWithIncludesAndPaginationAsync(
                     x => x.CustomerId == customerId.Value,
-                    cancellationToken,
                     pageNumber,
                     pageSize,
+                    cancellationToken,
                     x => x.Offers!,
                     x => x.Objects!)
                 : await _repository.FindWithIncludesAndPaginationAsync(
                     x => true,
-                    cancellationToken,
                     pageNumber,
                     pageSize,
+                    cancellationToken,
                     x => x.Offers!,
                     x => x.Objects!);
 
