@@ -3,6 +3,7 @@ using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services;
 using Domain.Options;
 using Infrastructure.Contexts;
+using Infrastructure.MappingProfiles;
 using Infrastructure.Repositories;
 using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -32,8 +33,18 @@ namespace Infrastructure
                     <IOptionsSnapshot<ConnectionStringOptions>>().Value.ApplicationDbConnection);
             });
 
+            //Base repository registration
             services.AddScoped(typeof(IBaseRepository<,>), typeof(BaseRepository<,>));
+
+            // Application services registration
             services.AddScoped<IMailService, MailTrapService>();
+
+            // Automapper services profiles registration
+            services.AddAutoMapper(cfg =>
+            {
+                //add all profiles here
+                cfg.AddProfile(new ArticleProfile());
+            });
 
             return services;
         }

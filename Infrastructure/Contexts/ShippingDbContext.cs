@@ -1,5 +1,6 @@
 using Domain.Models.Feedback;
 using Domain.Models.Messaging;
+using Domain.Models.News;
 using Domain.Models.Orders;
 using Domain.Models.Reviews;
 using Domain.Models.Vehicles;
@@ -19,6 +20,9 @@ namespace Infrastructure.Contexts
         public DbSet<Message> Messages { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<Feedback> Feedbacks { get; set; } = null!;
+
+        //News and Articles
+        public virtual DbSet<Article> Articles { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

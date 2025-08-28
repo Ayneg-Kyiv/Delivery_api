@@ -18,9 +18,8 @@ namespace Domain.Interfaces.Repositories
             CancellationToken cancellationToken,
             params Expression<Func<T, object>>[] includes);
 
-        Task<(int TotalCount, int TotalPages)> GetTotalCountAndPagesAsync(
+        Task<int>  GetTotalCountAsync(
             Expression<Func<T, bool>> predicate,
-            int pageSize,
             CancellationToken cancellationToken,
             params Expression<Func<T, object>>[] includes);
         

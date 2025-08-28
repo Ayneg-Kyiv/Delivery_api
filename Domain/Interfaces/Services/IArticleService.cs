@@ -1,21 +1,20 @@
-﻿using Domain.Models.DTOs.News;
+﻿using Domain.Models.DTOs;
+using Domain.Models.DTOs.News;
 using Domain.Models.News;
-using System.Linq.Expressions;
 
 namespace Domain.Interfaces.Services
 {
     public interface IArticleService
     {
-        Task<IEnumerable<GetArticleDto>> GetArticlesBatch(int batchSize, int batchNumber);
-        Task<(int TotalCount, int TotalPages)> GetTotalArticlesCount(
-            Expression<Func<Article, bool>> predicate,
-            CancellationToken cancellationToken,
+        Task<TResponse> GetArticlesBatch(
+            string? author,
+            int pageNumber,
             int pageSize,
-            params Expression<Func<Article, object>>[] includes);
+            CancellationToken cancellationToken);
 
-        Task<GetArticleDto?> GetArticleById(Guid id, CancellationToken cancellationToken);
-        Task<GetArticleDto?> CreateArticle(Article article, CancellationToken cancellationToken);
-        Task<GetArticleDto?> UpdateArticle(Article article, CancellationToken cancellationToken);
-        Task<bool> DeleteArticle(Guid id, CancellationToken cancellationToken);
+        Task<TResponse> GetArticleById(Guid id, CancellationToken cancellationToken);
+        Task<TResponse> CreateArticle(CreateArticleDto article, CancellationToken cancellationToken);
+        Task<TResponse> UpdateArticle(Article article, CancellationToken cancellationToken);
+        Task<TResponse> DeleteArticle(Guid id, CancellationToken cancellationToken);
     }
 }
