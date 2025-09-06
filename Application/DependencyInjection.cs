@@ -19,6 +19,7 @@ namespace Application
 
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IArticleService, ArticleService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<ISessionDataService, SessionDataService>();
             services.AddScoped<IFileService, FileService>();

@@ -18,9 +18,8 @@ namespace Domain.Interfaces.Repositories
             CancellationToken cancellationToken,
             params Expression<Func<T, object>>[] includes);
 
-        Task<(int TotalCount, int TotalPages)> GetTotalCountAndPagesAsync(
+        Task<int>  GetTotalCountAsync(
             Expression<Func<T, bool>> predicate,
-            int pageSize,
             CancellationToken cancellationToken,
             params Expression<Func<T, object>>[] includes);
         
@@ -30,5 +29,11 @@ namespace Domain.Interfaces.Repositories
         Task<bool> DeleteBatchAsync(
             IEnumerable<T> entities,
             CancellationToken cancellationToken);
+
+        Task<IEnumerable<object>> FindAllUniqueDataInProperties(
+            Expression<Func<T, bool>> predicate,
+            Expression<Func<T, object>> propertySelector,
+            CancellationToken cancellationToken,
+            params Expression<Func<T, object>>[] includes);
     }
 }

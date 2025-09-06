@@ -4,6 +4,7 @@ using Infrastructure.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations.ShippingDb
 {
     [DbContext(typeof(ShippingDbContext))]
-    partial class ShippingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250825141029_Added_Article_Entity")]
+    partial class Added_Article_Entity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -367,194 +370,6 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.ToTable("Reviews");
                 });
 
-            modelBuilder.Entity("Domain.Models.Ride.DeliveryOrder", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
-
-                    b.Property<Guid>("DeliverySlotId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("EndLocationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsDelivered")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsPickedUp")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ReceiverName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReceiverPhoneNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SenderEmail")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("SenderId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("SenderName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SenderPhoneNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("StartLocationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("TripId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2")
-                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DeliverySlotId")
-                        .IsUnique();
-
-                    b.HasIndex("EndLocationId");
-
-                    b.HasIndex("StartLocationId");
-
-                    b.HasIndex("TripId");
-
-                    b.ToTable("DeliveryOrders");
-                });
-
-            modelBuilder.Entity("Domain.Models.Ride.DeliverySlot", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("ApproximatePrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("CargoSlotTypeName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
-
-                    b.Property<bool>("IsAvailable")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("MaxVolume")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MaxWeight")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("TripId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2")
-                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TripId");
-
-                    b.ToTable("DeliverySlots");
-                });
-
-            modelBuilder.Entity("Domain.Models.Ride.Location", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
-
-                    b.Property<DateTime>("DateTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<double?>("Latitude")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("Longitude")
-                        .HasColumnType("float");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2")
-                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Locations");
-                });
-
-            modelBuilder.Entity("Domain.Models.Ride.Trip", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
-
-                    b.Property<Guid>("DriverId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("EndLocationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("StartLocationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2")
-                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EndLocationId");
-
-                    b.HasIndex("StartLocationId");
-
-                    b.ToTable("Trips");
-                });
-
             modelBuilder.Entity("Domain.Models.Vehicles.Vehicle", b =>
                 {
                     b.Property<int>("Id")
@@ -659,71 +474,6 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.Navigation("ShippingOrder");
                 });
 
-            modelBuilder.Entity("Domain.Models.Ride.DeliveryOrder", b =>
-                {
-                    b.HasOne("Domain.Models.Ride.DeliverySlot", "DeliverySlot")
-                        .WithOne("DeliveryOrder")
-                        .HasForeignKey("Domain.Models.Ride.DeliveryOrder", "DeliverySlotId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Models.Ride.Location", "EndLocation")
-                        .WithMany("DeliveryOrderEndLocations")
-                        .HasForeignKey("EndLocationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Models.Ride.Location", "StartLocation")
-                        .WithMany("DeliveryOrderStartLocations")
-                        .HasForeignKey("StartLocationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Models.Ride.Trip", "Trip")
-                        .WithMany("Orders")
-                        .HasForeignKey("TripId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("DeliverySlot");
-
-                    b.Navigation("EndLocation");
-
-                    b.Navigation("StartLocation");
-
-                    b.Navigation("Trip");
-                });
-
-            modelBuilder.Entity("Domain.Models.Ride.DeliverySlot", b =>
-                {
-                    b.HasOne("Domain.Models.Ride.Trip", "Trip")
-                        .WithMany("Slots")
-                        .HasForeignKey("TripId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Trip");
-                });
-
-            modelBuilder.Entity("Domain.Models.Ride.Trip", b =>
-                {
-                    b.HasOne("Domain.Models.Ride.Location", "EndLocation")
-                        .WithMany("TripsEnd")
-                        .HasForeignKey("EndLocationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Models.Ride.Location", "StartLocation")
-                        .WithMany("TripsStart")
-                        .HasForeignKey("StartLocationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("EndLocation");
-
-                    b.Navigation("StartLocation");
-                });
-
             modelBuilder.Entity("Domain.Models.Orders.ShippingOrder", b =>
                 {
                     b.Navigation("Objects");
@@ -731,29 +481,6 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.Navigation("Offers");
 
                     b.Navigation("ShippingDestinations");
-                });
-
-            modelBuilder.Entity("Domain.Models.Ride.DeliverySlot", b =>
-                {
-                    b.Navigation("DeliveryOrder");
-                });
-
-            modelBuilder.Entity("Domain.Models.Ride.Location", b =>
-                {
-                    b.Navigation("DeliveryOrderEndLocations");
-
-                    b.Navigation("DeliveryOrderStartLocations");
-
-                    b.Navigation("TripsEnd");
-
-                    b.Navigation("TripsStart");
-                });
-
-            modelBuilder.Entity("Domain.Models.Ride.Trip", b =>
-                {
-                    b.Navigation("Orders");
-
-                    b.Navigation("Slots");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,4 +1,5 @@
 ﻿using Domain.Interfaces.Repositories;
+using Domain.Models.Abstract;
 using Infrastructure.Contexts;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -73,7 +74,10 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<IEnumerable<T>> FindWithIncludesAndPaginationAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken, int pageNumber, int pageSize, params Expression<Func<T, object>>[] includes)
+        public async Task<IEnumerable<T>> FindWithIncludesAndPaginationAsync(Expression<Func<T, bool>> predicate,
+                                                                             int pageNumber, int pageSize,
+                                                                             CancellationToken cancellationToken,
+                                                                             params Expression<Func<T, object>>[] includes)
         {
             try
             {
@@ -82,6 +86,16 @@ namespace Infrastructure.Repositories
                 foreach (var include in includes)
                 {
                     query = query.Include(include);
+                }
+                
+                if (typeof(BaseModel).IsAssignableFrom(typeof(T)))
+                {
+                    var propertyInfo = typeof(T).GetProperty("CreatedAt");
+
+                    if (propertyInfo != null)
+                    {
+                        query = query.OrderByDescending(e => EF.Property<DateTime>(e, "CreatedAt"));
+                    }
                 }
 
                 return await query.Skip((pageNumber - 1) * pageSize)
@@ -96,12 +110,10 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public Task<IEnumerable<T>> FindWithIncludesAndPaginationAsync(Expression<Func<T, bool>> predicate, int pageNumber, int pageSize, CancellationToken cancellationToken, params Expression<Func<T, object>>[] includes)
-        {
-            throw new NotImplementedException();
-        }
 
-        public async Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken, params Expression<Func<T, object>>[] includes)
+        public async Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate,
+                                                                CancellationToken cancellationToken,
+                                                                params Expression<Func<T, object>>[] includes)
         {
             try
             {
@@ -122,6 +134,28 @@ namespace Infrastructure.Repositories
             }
         }
 
+        public async Task<IEnumerable<object>> FindAllUniqueDataInProperties(Expression<Func<T, bool>> predicate,
+                                                                             Expression<Func<T, object>> propertySelector,
+                                                                             CancellationToken cancellationToken,
+                                                                             params Expression<Func<T, object>>[] includes)
+        {
+            try
+            {
+                IQueryable<T> query = _dbSet.Where(predicate);
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+                return await query.Select(propertySelector).Distinct().ToListAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving unique property data: {ex.Message}");
+                // Log the exception or handle it as needed
+                return [];
+            }
+        }
+
         public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken)
         {
             try
@@ -136,7 +170,7 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<(int TotalCount, int TotalPages)> GetTotalCountAndPagesAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken, int pageSize, params Expression<Func<T, object>>[] includes)
+        public async Task<int> GetTotalCountAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken, params Expression<Func<T, object>>[] includes)
         {
             try
             {
@@ -147,22 +181,16 @@ namespace Infrastructure.Repositories
                     query = query.Include(include);
                 }
 
-                var totalCount = await query.CountAsync(cancellationToken);
-                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-                
-                return (totalCount, totalPages);
+                int totalCount = await query.CountAsync(cancellationToken);
+
+                return totalCount;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error calculating total count and pages: {ex.Message}");
                 // Log the exception or handle it as needed
-                return (0, 0);
+                return 0;
             }
-        }
-
-        public Task<(int TotalCount, int TotalPages)> GetTotalCountAndPagesAsync(Expression<Func<T, bool>> predicate, int pageSize, CancellationToken cancellationToken, params Expression<Func<T, object>>[] includes)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<bool> UpdateAsync(T entity, CancellationToken cancellationToken)

@@ -4,7 +4,6 @@ using Application;
 using Application.Middleware;
 using Domain.Models.Identity;
 using Domain.Options;
-using Infrastructure;
 using Infrastructure.Contexts;
 using Infrastructure.Seeds;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -24,7 +23,7 @@ builder.Services.Configure<ConnectionStringOptions>(
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-// builder.Services.AddOpenApi(); // Removed because AddOpenApi does not exist; AddSwaggerGen is used instead.
+builder.Services.AddOpenApi();
 
 builder.Services.AddCors();
 
