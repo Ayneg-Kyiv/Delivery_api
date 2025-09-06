@@ -29,5 +29,11 @@ namespace Domain.Interfaces.Repositories
         Task<bool> DeleteBatchAsync(
             IEnumerable<T> entities,
             CancellationToken cancellationToken);
+
+        Task<IEnumerable<object>> FindAllUniqueDataInProperties(
+            Expression<Func<T, bool>> predicate,
+            Expression<Func<T, object>> propertySelector,
+            CancellationToken cancellationToken,
+            params Expression<Func<T, object>>[] includes);
     }
 }

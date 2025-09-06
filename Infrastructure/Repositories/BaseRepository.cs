@@ -74,7 +74,10 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<IEnumerable<T>> FindWithIncludesAndPaginationAsync(Expression<Func<T, bool>> predicate, int pageNumber, int pageSize, CancellationToken cancellationToken, params Expression<Func<T, object>>[] includes)
+        public async Task<IEnumerable<T>> FindWithIncludesAndPaginationAsync(Expression<Func<T, bool>> predicate,
+                                                                             int pageNumber, int pageSize,
+                                                                             CancellationToken cancellationToken,
+                                                                             params Expression<Func<T, object>>[] includes)
         {
             try
             {
@@ -108,7 +111,9 @@ namespace Infrastructure.Repositories
         }
 
 
-        public async Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken, params Expression<Func<T, object>>[] includes)
+        public async Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate,
+                                                                CancellationToken cancellationToken,
+                                                                params Expression<Func<T, object>>[] includes)
         {
             try
             {
@@ -124,6 +129,28 @@ namespace Infrastructure.Repositories
             catch (Exception ex)
             {
                 Console.WriteLine($"Error retrieving entities with includes: {ex.Message}");
+                // Log the exception or handle it as needed
+                return [];
+            }
+        }
+
+        public async Task<IEnumerable<object>> FindAllUniqueDataInProperties(Expression<Func<T, bool>> predicate,
+                                                                             Expression<Func<T, object>> propertySelector,
+                                                                             CancellationToken cancellationToken,
+                                                                             params Expression<Func<T, object>>[] includes)
+        {
+            try
+            {
+                IQueryable<T> query = _dbSet.Where(predicate);
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+                return await query.Select(propertySelector).Distinct().ToListAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving unique property data: {ex.Message}");
                 // Log the exception or handle it as needed
                 return [];
             }

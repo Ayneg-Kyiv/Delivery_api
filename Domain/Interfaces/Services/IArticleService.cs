@@ -6,15 +6,15 @@ namespace Domain.Interfaces.Services
 {
     public interface IArticleService
     {
-        Task<TResponse> GetArticlesBatch(
+        Task<TResponse> GetArticlesBatchAsync(
             string? author,
             int pageNumber,
             int pageSize,
             CancellationToken cancellationToken);
 
-        Task<TResponse> GetArticleById(Guid id, CancellationToken cancellationToken);
-        Task<TResponse> CreateArticle(CreateArticleDto article, CancellationToken cancellationToken);
-        Task<TResponse> UpdateArticle(Article article, CancellationToken cancellationToken);
-        Task<TResponse> DeleteArticle(Guid id, CancellationToken cancellationToken);
+        Task<TResponse> GetArticleByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<TResponse> CreateArticleAsync(CreateArticleDto article, CancellationToken cancellationToken);
+        Task<TResponse> UpdateArticleAsync(Article article, CancellationToken cancellationToken);
+        Task<TResponse> DeleteArticleAsync(Guid id, CancellationToken cancellationToken);
     }
 }

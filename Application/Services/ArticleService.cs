@@ -13,7 +13,7 @@ namespace Application.Services
                                 IMapper mapper,
                                 IFileService fileService) : IArticleService
     {
-        public async Task<TResponse> CreateArticle(CreateArticleDto article, CancellationToken cancellationToken)
+        public async Task<TResponse> CreateArticleAsync(CreateArticleDto article, CancellationToken cancellationToken)
         {
             if (article == null) return TResponse.Failure(405, "Article data is null");
 
@@ -32,7 +32,7 @@ namespace Application.Services
             return TResponse.Successful(createdArticle, "Article created successfully");
         }
 
-        public async Task<TResponse> DeleteArticle(Guid id, CancellationToken cancellationToken)
+        public async Task<TResponse> DeleteArticleAsync(Guid id, CancellationToken cancellationToken)
         {
             if (id == Guid.Empty) return TResponse.Failure(405, "Invalid article ID");
 
@@ -52,7 +52,7 @@ namespace Application.Services
             return TResponse.Successful(200, "Article deleted successfully");
         }
 
-        public async Task<TResponse> GetArticleById(Guid id, CancellationToken cancellationToken)
+        public async Task<TResponse> GetArticleByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             if (id == Guid.Empty) return TResponse.Failure(405, "Invalid article ID");
 
@@ -65,7 +65,7 @@ namespace Application.Services
             return TResponse.Successful(articleDto, "Article retrieved successfully");
         }
 
-        public async Task<TResponse> GetArticlesBatch(
+        public async Task<TResponse> GetArticlesBatchAsync(
             string? author,
             int pageNumber,
             int pageSize,
@@ -101,7 +101,7 @@ namespace Application.Services
             return TResponse.Successful(new PaginatedPage { Data = articlesDto, Pagination = paginationInfo}, "Articles retrieved successfully");
         }
 
-        public async Task<TResponse> UpdateArticle(Article article, CancellationToken cancellationToken)
+        public async Task<TResponse> UpdateArticleAsync(Article article, CancellationToken cancellationToken)
         {
             if (article == null) return TResponse.Failure(405, "Article data is null");
 

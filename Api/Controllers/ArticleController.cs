@@ -15,7 +15,7 @@ namespace Api.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateArticle([FromForm] CreateArticleDto article, CancellationToken cancellationToken)
         {
-            var result = await articleService.CreateArticle(article, cancellationToken);
+            var result = await articleService.CreateArticleAsync(article, cancellationToken);
             
             if (!result.Success)
                 return BadRequest(result);
@@ -27,7 +27,7 @@ namespace Api.Controllers
         [HttpPut("update")]
         public async Task<IActionResult> UpdateArticle([FromForm] Article article, CancellationToken cancellationToken)
         {
-            var result = await articleService.UpdateArticle(article, cancellationToken);
+            var result = await articleService.UpdateArticleAsync(article, cancellationToken);
             
             if (!result.Success)
                 return BadRequest(result);
@@ -39,7 +39,7 @@ namespace Api.Controllers
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteArticle([FromRoute]Guid id, CancellationToken cancellationToken)
         {
-            var result = await articleService.DeleteArticle(id, cancellationToken);
+            var result = await articleService.DeleteArticleAsync(id, cancellationToken);
             
             if (!result.Success)
                 return BadRequest(result);
@@ -51,7 +51,7 @@ namespace Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetArticleById([FromRoute] Guid id, CancellationToken cancellationToken)
         {
-            var result = await articleService.GetArticleById(id, cancellationToken);
+            var result = await articleService.GetArticleByIdAsync(id, cancellationToken);
             
             if (!result.Success)
                 return BadRequest(result);
@@ -65,7 +65,7 @@ namespace Api.Controllers
                                                      [FromQuery] int pageSize = 10,
                                                      CancellationToken cancellationToken = default)
         {
-            var result = await articleService.GetArticlesBatch(author, pageNumber, pageSize, cancellationToken);
+            var result = await articleService.GetArticlesBatchAsync(author, pageNumber, pageSize, cancellationToken);
             
             if (!result.Success)
                 return BadRequest(result);

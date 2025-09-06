@@ -3,7 +3,9 @@ using Domain.Models.Messaging;
 using Domain.Models.News;
 using Domain.Models.Orders;
 using Domain.Models.Reviews;
+using Domain.Models.Ride;
 using Domain.Models.Vehicles;
+using Infrastructure.Contexts.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System;
 namespace Infrastructure.Contexts
@@ -24,6 +26,12 @@ namespace Infrastructure.Contexts
         //News and Articles
         public virtual DbSet<Article> Articles { get; set; } = null!;
 
+        // Trips
+        public virtual DbSet<Trip> Trips { get; set; } = null!;
+        public virtual DbSet<Location> Locations { get; set; } = null!;
+        public virtual DbSet<DeliverySlot> DeliverySlots { get; set; } = null!;
+        public virtual DbSet<DeliveryOrder> DeliveryOrders { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -42,6 +50,8 @@ namespace Infrastructure.Contexts
             builder.Entity<ShippingOrder>()
                 .Property(o => o.EstimatedCost)
                 .HasPrecision(18, 4);
+
+            builder.SetTripEntityExtension();
         }
     }
 }

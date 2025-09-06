@@ -44,6 +44,10 @@ namespace Infrastructure
             {
                 //add all profiles here
                 cfg.AddProfile(new ArticleProfile());
+                cfg.AddProfile(new DeliveryOrderProfile());
+                cfg.AddProfile(new LocationProfile());
+                cfg.AddProfile(new DeliverySlotProfile());
+                cfg.AddProfile(new TripProfile());
             });
 
             return services;
