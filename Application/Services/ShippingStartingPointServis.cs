@@ -30,14 +30,14 @@ namespace Application.Services
 
         public async Task<ShippingStartingPointDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.Id == id], cancellationToken);
             var entity = entities.FirstOrDefault();
             return entity == null ? null : _mapper.Map<ShippingStartingPointDto>(entity);
         }
 
         public async Task<IEnumerable<ShippingStartingPointDto>> GetByOrderIdAsync(Guid orderId, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.ShippingOrderId == orderId, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.ShippingOrderId == orderId], cancellationToken);
             return _mapper.Map<IEnumerable<ShippingStartingPointDto>>(entities);
         }
 
@@ -64,7 +64,7 @@ namespace Application.Services
 
         public async Task<bool> UpdateAsync(Guid id, UpdateShippingStartingPointDto dto, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.Id == id], cancellationToken);
             var entity = entities.FirstOrDefault();
             if (entity == null) return false;
 
@@ -83,7 +83,7 @@ namespace Application.Services
 
         public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.Id == id], cancellationToken);
             var entity = entities.FirstOrDefault();
             if (entity == null) return false;
             return await _repository.DeleteAsync(entity, cancellationToken);

@@ -12,11 +12,12 @@ namespace Api.Controllers
     public class ArticleController (IArticleService articleService) : ControllerBase
     {
         [Authorize(Roles = "Admin")]
+        [Consumes("multipart/form-data")]
         [HttpPost("create")]
-        public async Task<IActionResult> CreateArticle([FromForm] CreateArticleDto article, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateArticle([FromBody] CreateArticleDto article, CancellationToken cancellationToken)
         {
             var result = await articleService.CreateArticleAsync(article, cancellationToken);
-            
+
             if (!result.Success)
                 return BadRequest(result);
 
@@ -24,11 +25,12 @@ namespace Api.Controllers
         }
 
         [Authorize(Roles = "Admin")]
+        [Consumes("multipart/form-data")]
         [HttpPut("update")]
-        public async Task<IActionResult> UpdateArticle([FromForm] Article article, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateArticle([FromBody] UpdateArticleDto article, CancellationToken cancellationToken)
         {
             var result = await articleService.UpdateArticleAsync(article, cancellationToken);
-            
+
             if (!result.Success)
                 return BadRequest(result);
 
@@ -37,13 +39,25 @@ namespace Api.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("delete/{id}")]
-        public async Task<IActionResult> DeleteArticle([FromRoute]Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> DeleteArticle([FromRoute] Guid id, CancellationToken cancellationToken)
         {
             var result = await articleService.DeleteArticleAsync(id, cancellationToken);
-            
+
             if (!result.Success)
                 return BadRequest(result);
 
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("block/delete/{id}")]
+        public async Task<IActionResult> DeleteArticleBlock([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var result = await articleService.DeleteArticleBlockAsync(id, cancellationToken);
+            
+            if (!result.Success)
+                return BadRequest(result);
+            
             return Ok(result);
         }
 
@@ -52,7 +66,7 @@ namespace Api.Controllers
         public async Task<IActionResult> GetArticleById([FromRoute] Guid id, CancellationToken cancellationToken)
         {
             var result = await articleService.GetArticleByIdAsync(id, cancellationToken);
-            
+
             if (!result.Success)
                 return BadRequest(result);
 
@@ -60,13 +74,52 @@ namespace Api.Controllers
         }
 
         [HttpGet("list")]
-        public async Task<IActionResult> GetArticles([FromQuery] string? author,
-                                                     [FromQuery] int pageNumber = 1,
-                                                     [FromQuery] int pageSize = 10,
-                                                     CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetArticles(
+            [FromQuery] string? author,
+            [FromQuery] string? category,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            CancellationToken cancellationToken = default)
         {
-            var result = await articleService.GetArticlesBatchAsync(author, pageNumber, pageSize, cancellationToken);
-            
+            var result = await articleService.GetArticlesBatchAsync(author, category, pageNumber, pageSize, cancellationToken);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpGet("search-params")]
+        public async Task<IActionResult> GetSearchParams(CancellationToken cancellationToken)
+        {
+            var result = await articleService.GetSearchParamsAsync(cancellationToken);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [Consumes("multipart/form-data")]
+        [HttpPost("block/create")]
+        public async Task<IActionResult> AddArticleBlock([FromBody] CreateArticleBlockDto articleBlock, CancellationToken cancellationToken)
+        {
+            var result = await articleService.AddArticleBlockAsync(articleBlock, cancellationToken);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [Consumes("multipart/form-data")]
+        [HttpPut("block/update")]
+        public async Task<IActionResult> UpdateArticleBlock([FromBody] UpdateArticleBlockDto articleBlock, CancellationToken cancellationToken)
+        {
+            var result = await articleService.UpdateArticleBlockAsync(articleBlock, cancellationToken);
+
             if (!result.Success)
                 return BadRequest(result);
 

@@ -39,7 +39,7 @@ namespace Infrastructure
             // Application services registration
             services.AddScoped<IMailService, MailTrapService>();
 
-            // Automapper services profiles registration
+             //Automapper services profiles registration
             services.AddAutoMapper(cfg =>
             {
                 //add all profiles here

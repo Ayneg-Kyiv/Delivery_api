@@ -10,6 +10,7 @@ using Domain.Models.DTOs.Ride.Trip;
 using Domain.Models.Identity;
 using Domain.Models.Ride;
 using Infrastructure.Contexts;
+using System.Linq.Expressions;
 
 namespace Application.Services
 {
@@ -33,15 +34,24 @@ namespace Application.Services
             int pageSize,
             CancellationToken cancellationToken)
         {
-            var totalCount = await tripRepository.GetTotalCountAsync(
-                t => (string.IsNullOrEmpty(cityFrom) || t.StartLocation.City == cityFrom) &&
-                     (string.IsNullOrEmpty(cityTo) || t.EndLocation.City == cityTo) &&
-                     (dateFrom == null || t.StartLocation.DateTime == dateFrom) &&
-                     (dateTo == null || t.EndLocation.DateTime == dateTo) &&
-                     (priceFrom == null || t.Slots.Any(s => s.ApproximatePrice >= priceFrom)) &&
-                     (priceTo == null || t.Slots.Any(s => s.ApproximatePrice <= priceTo)) &&
-                     (cargoType == null || t.Slots.Any(s => s.CargoSlotTypeName == cargoType)),
-                cancellationToken,
+            List<Expression<Func<Trip, bool>>> predicate = [];
+
+            if (!string.IsNullOrEmpty(cityFrom))
+                predicate.Add(t => t.StartLocation.City == cityFrom);
+            if (!string.IsNullOrEmpty(cityTo))
+                predicate.Add(t => t.EndLocation.City == cityTo);
+            if (dateFrom != null)
+                predicate.Add(t => t.StartLocation.DateTime == dateFrom);
+            if (dateTo != null)
+                predicate.Add(t => t.EndLocation.DateTime == dateTo);
+            if (priceFrom != null)
+                predicate.Add(t => t.Slots.Any(s => s.ApproximatePrice >= priceFrom));
+            if (priceTo != null)
+                predicate.Add(t => t.Slots.Any(s => s.ApproximatePrice <= priceTo));
+            if (cargoType != null)
+                predicate.Add(t => t.Slots.Any(s => s.CargoSlotTypeName == cargoType));
+
+            var totalCount = await tripRepository.GetTotalCountAsync(predicate, cancellationToken,
                 [
                     t => t.StartLocation,
                     t => t.EndLocation,
@@ -49,13 +59,7 @@ namespace Application.Services
                 ]);
 
             var trips = await tripRepository.FindWithIncludesAndPaginationAsync(
-                t => (string.IsNullOrEmpty(cityFrom) || t.StartLocation.City == cityFrom) &&
-                     (string.IsNullOrEmpty(cityTo) || t.EndLocation.City == cityTo) &&
-                     (dateFrom == null || t.StartLocation.DateTime == dateFrom) &&
-                     (dateTo == null || t.EndLocation.DateTime == dateTo) &&
-                     (priceFrom == null || t.Slots.Any(s => s.ApproximatePrice >= priceFrom)) &&
-                     (priceTo == null || t.Slots.Any(s => s.ApproximatePrice <= priceTo)) &&
-                     (cargoType == null || t.Slots.Any(s => s.CargoSlotTypeName == cargoType)),
+                predicate,
                 pageNumber,
                 pageSize,
                 cancellationToken,
@@ -133,7 +137,7 @@ namespace Application.Services
                     return TResponse.Failure(500, "Failed to create delivery slot.");
             }
 
-            var returnTrip = await tripRepository.FindWithIncludesAsync(t => t.Id == trip.Id, cancellationToken,
+            var returnTrip = await tripRepository.FindWithIncludesAsync([t => t.Id == trip.Id], cancellationToken,
                 [t => t.StartLocation, t => t.EndLocation, t => t.Slots]);
 
             var tripResultDto = mapper.Map<GetTripDto>(returnTrip.First());
@@ -143,7 +147,7 @@ namespace Application.Services
 
         public async Task<TResponse> GetTripByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var trip = await tripRepository.FindWithIncludesAsync(t => t.Id == id, cancellationToken,
+            var trip = await tripRepository.FindWithIncludesAsync([t => t.Id == id], cancellationToken,
                 [t => t.StartLocation, t => t.EndLocation, t => t.Slots, t => t.Orders]);
 
             if (trip == null || !trip.Any())
@@ -156,26 +160,26 @@ namespace Application.Services
 
         public async Task<TResponse> DeleteTripAsync(Guid id, CancellationToken cancellationToken)
         {
-            var trip = await tripRepository.FindAsync(t => t.Id == id, cancellationToken);
+            var trip = await tripRepository.FindAsync([t => t.Id == id], cancellationToken);
 
             if (trip == null || !trip.Any())
                 return TResponse.Failure(404, "Trip not found.");
 
             // Optionally, you might want to delete associated locations and slots
-            var orders = await deliveryOrderRepository.FindAsync(o => o.TripId == trip.First().Id, cancellationToken);
-            
+            var orders = await deliveryOrderRepository.FindAsync([o => o.TripId == trip.First().Id], cancellationToken);
+
             if(orders.Any(o => o.IsPickedUp || o.IsDelivered))
                 return TResponse.Failure(400, "Cannot delete trip with active delivery orders.");
 
             await deliveryOrderRepository.DeleteBatchAsync(orders, cancellationToken);
 
-            var slots = await deliverySlotRepository.FindAsync(s => s.TripId == trip.First().Id, cancellationToken);
+            var slots = await deliverySlotRepository.FindAsync([s => s.TripId == trip.First().Id], cancellationToken);
             await deliverySlotRepository.DeleteBatchAsync(slots, cancellationToken);
 
-            var startLocations = await locationRepository.FindAsync(l => l.Id == trip.First().StartLocationId, cancellationToken);
+            var startLocations = await locationRepository.FindAsync([l => l.Id == trip.First().StartLocationId], cancellationToken);
             await locationRepository.DeleteBatchAsync(startLocations, cancellationToken);
 
-            var endLocations = await locationRepository.FindAsync(l => l.Id == trip.First().EndLocationId, cancellationToken);
+            var endLocations = await locationRepository.FindAsync([l => l.Id == trip.First().EndLocationId], cancellationToken);
             await locationRepository.DeleteBatchAsync(endLocations, cancellationToken);
 
             var deleted = await tripRepository.DeleteAsync(trip.First(), cancellationToken);
@@ -194,7 +198,7 @@ namespace Application.Services
             if(locationDto.Id == Guid.Empty)
                 return TResponse.Failure(400, "Location ID must be provided.");
 
-            var existingLocation = await locationRepository.FindAsync(l => l.Id == locationDto.Id, cancellationToken);
+            var existingLocation = await locationRepository.FindAsync([l => l.Id == locationDto.Id], cancellationToken);
 
             if (existingLocation == null || !existingLocation.Any())
                 return TResponse.Failure(404, "Location not found.");
@@ -219,7 +223,7 @@ namespace Application.Services
 
         public async Task<TResponse> AddDeliverySlotAsync(Guid tripId, CreateDeliverySlotDto slot, CancellationToken cancellationToken)
         {
-            var trip = await tripRepository.FindAsync(t => t.Id == tripId, cancellationToken);
+            var trip = await tripRepository.FindAsync([t => t.Id == tripId], cancellationToken);
 
             if (trip == null || !trip.Any())
                 return TResponse.Failure(404, "Trip not found.");
@@ -240,15 +244,15 @@ namespace Application.Services
             if (deliveryOrderDto == null)
                 return TResponse.Failure(404, "Delivery order data must be provided.");
 
-            var user = await userRepository.FindAsync(u => u.Id == deliveryOrderDto.SenderId, cancellationToken);
+            var user = await userRepository.FindAsync([u => u.Id == deliveryOrderDto.SenderId], cancellationToken);
             if (user == null || !user.Any())
                 return TResponse.Failure(404, "User not found.");
 
-            var trip = await tripRepository.FindAsync(t => t.Id == deliveryOrderDto.TripId, cancellationToken);
+            var trip = await tripRepository.FindAsync([t => t.Id == deliveryOrderDto.TripId], cancellationToken);
             if (trip == null || !trip.Any())
                 return TResponse.Failure(404, "Trip not found.");
 
-            var slot = await deliverySlotRepository.FindAsync(s => s.Id == deliveryOrderDto.DeliverySlotId, cancellationToken);
+            var slot = await deliverySlotRepository.FindAsync([s => s.Id == deliveryOrderDto.DeliverySlotId], cancellationToken);
             if (slot == null || !slot.Any())
                 return TResponse.Failure(404, "Delivery slot not found.");
 
@@ -273,12 +277,12 @@ namespace Application.Services
             if (id == Guid.Empty)
                 return TResponse.Failure(400, "Delivery order ID must be provided.");
 
-            var order = await deliveryOrderRepository.FindAsync(o => o.Id == id, cancellationToken);
+            var order = await deliveryOrderRepository.FindAsync([o => o.Id == id], cancellationToken);
 
             if (order == null || !order.Any())
                 return TResponse.Failure(404, "Delivery order not found.");
 
-            var slot = await deliverySlotRepository.FindAsync(s => s.Id == order.First().DeliverySlotId, cancellationToken);
+            var slot = await deliverySlotRepository.FindAsync([s => s.Id == order.First().DeliverySlotId], cancellationToken);
             if (slot == null || !slot.Any())
                 return TResponse.Failure(404, "Associated delivery slot not found.");
 
@@ -301,11 +305,11 @@ namespace Application.Services
 
             if( tripId != Guid.Empty)
             {
-                var trip = await tripRepository.FindAsync(t => t.Id == tripId, cancellationToken);
+                var trip = await tripRepository.FindAsync([t => t.Id == tripId], cancellationToken);
                 if (trip == null || !trip.Any())
                     return TResponse.Failure(404, "Trip not found.");
 
-                var orders = await deliveryOrderRepository.FindWithIncludesAsync(o => o.TripId == tripId, cancellationToken,
+                var orders = await deliveryOrderRepository.FindWithIncludesAsync([o => o.TripId == tripId], cancellationToken,
                     [o => o.StartLocation, o => o.EndLocation]);
 
                 var orderDtos = mapper.Map<List<GetDeliveryOrderDto>>(orders);
@@ -314,11 +318,11 @@ namespace Application.Services
 
             if(userId != Guid.Empty)
             {
-                var user = await userRepository.FindAsync(u => u.Id == userId, cancellationToken);
+                var user = await userRepository.FindAsync([u => u.Id == userId], cancellationToken);
                 if (user == null || !user.Any())
                     return TResponse.Failure(404, "User not found.");
 
-                var orders = await deliveryOrderRepository.FindWithIncludesAsync(o => o.SenderId == userId, cancellationToken,
+                var orders = await deliveryOrderRepository.FindWithIncludesAsync([o => o.SenderId == userId], cancellationToken,
                     [o => o.StartLocation, o => o.EndLocation]);
                 
                 var orderDtos = mapper.Map<List<GetDeliveryOrderDto>>(orders);
@@ -330,12 +334,12 @@ namespace Application.Services
 
         public async Task<TResponse> SetTripAsCompletedAsync(Guid id, CancellationToken cancellationToken)
         {
-            var trip = await tripRepository.FindAsync(t => t.Id == id, cancellationToken);
+            var trip = await tripRepository.FindAsync([t => t.Id == id], cancellationToken);
 
             if( trip == null || !trip.Any())
                 return TResponse.Failure(404, "Trip not found.");
 
-            var orders = await deliveryOrderRepository.FindAsync(o => o.TripId == trip.First().Id, cancellationToken);
+            var orders = await deliveryOrderRepository.FindAsync([o => o.TripId == trip.First().Id], cancellationToken);
             if (orders.Any(o => !o.IsDelivered))
                 return TResponse.Failure(400, "Cannot complete trip with undelivered orders.");
 
@@ -350,7 +354,7 @@ namespace Application.Services
 
         public async Task<TResponse> SetAsPickedUpAsync(Guid id, CancellationToken cancellationToken)
         {
-            var order = await deliveryOrderRepository.FindAsync(o => o.Id == id, cancellationToken);
+            var order = await deliveryOrderRepository.FindAsync([o => o.Id == id], cancellationToken);
 
             if (order == null || !order.Any())
                 return TResponse.Failure(404, "Delivery order not found.");
@@ -369,7 +373,7 @@ namespace Application.Services
 
         public async Task<TResponse> SetAsDeliveredAsync(Guid id, CancellationToken cancellationToken)
         {
-            var order = await deliveryOrderRepository.FindAsync(o => o.Id == id, cancellationToken);
+            var order = await deliveryOrderRepository.FindAsync([o => o.Id == id], cancellationToken);
             
             if (order == null || !order.Any())
                 return TResponse.Failure(404, "Delivery order not found.");

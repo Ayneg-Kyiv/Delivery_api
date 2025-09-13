@@ -8,6 +8,7 @@ namespace Domain.Models.DTOs.Identity
         [Required]
         public string Email { get; set; } = null!;
         [Required]
+        [DataType(DataType.Upload)]
         public IFormFile Image { get; set; } = null!;
     }
 }

@@ -15,6 +15,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddApplication(builder.Configuration);
 
 builder.Services.Configure<ConnectionStringOptions>(
     builder.Configuration.GetSection("ConnectionStringOptions"));
@@ -25,9 +26,7 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddCors();
-
-builder.Services.AddApplication(builder.Configuration);
+//builder.Services.AddCors();
 
 
 builder.Services.AddSwaggerGen();
@@ -116,33 +115,46 @@ if (app.Environment.IsDevelopment())
 
     app.UseCors(options =>
     {
-        options.WithOrigins("https://localhost:3000", "http://localhost:3000")
+        options.WithOrigins("https://delivery-web-client-ovube2lsj-yevhens-projects-fd53a482.vercel.app/",
+              "http://delivery-web-client-ovube2lsj-yevhens-projects-fd53a482.vercel.app/")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
     });
 }
-
-using (var scope = app.Services.CreateScope())
+else
 {
-    var services = scope.ServiceProvider;
-    try
-    {
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-        await ApplicationUserSeed.SeedRolesAsync(roleManager);
+    //app.UseCors(options =>
+    //{
 
-        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-        await ApplicationUserSeed.SeedUserAsync(userManager);
-
-        // Додаємо Seed для ShippingOrder
-        var shippingDbContext = services.GetRequiredService<ShippingDbContext>();
-        await ShippingOrderSeed.SeedAsync(shippingDbContext);
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
-    }
+    //    options.WithOrigins("https://delivery-web-client-ovube2lsj-yevhens-projects-fd53a482.vercel.app/",
+    //          "http://delivery-web-client-ovube2lsj-yevhens-projects-fd53a482.vercel.app/")
+    //          .AllowAnyHeader()
+    //          .AllowAnyMethod()
+    //          .AllowCredentials();
+    //});
 }
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        try
+        {
+            var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+            await ApplicationUserSeed.SeedRolesAsync(roleManager);
+
+            var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+            await ApplicationUserSeed.SeedUserAsync(userManager);
+
+            // Додаємо Seed для ShippingOrder
+            var shippingDbContext = services.GetRequiredService<ShippingDbContext>();
+            await ShippingOrderSeed.SeedAsync(shippingDbContext);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+        }
+    }
 
 app.UseCsrfProtection();
 

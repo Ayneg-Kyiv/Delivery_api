@@ -39,7 +39,7 @@ namespace Api.Controllers
         /// Отримати об'єкт доставки за ID
         /// </summary>
         [HttpGet("{id:guid}")]
-        public async Task<ActionResult<ShippingObjectDto>> GetById(Guid id, CancellationToken cancellationToken)
+        public async Task<ActionResult<ShippingObjectDto>> GetById([FromRoute]Guid id, CancellationToken cancellationToken)
         {
             try
             {
@@ -60,7 +60,7 @@ namespace Api.Controllers
         /// Отримати об'єкти доставки за ID замовлення
         /// </summary>
         [HttpGet("by-order/{shippingOrderId:guid}")]
-        public async Task<ActionResult<IEnumerable<ShippingObjectDto>>> GetByShippingOrderId(Guid shippingOrderId, CancellationToken cancellationToken)
+        public async Task<ActionResult<IEnumerable<ShippingObjectDto>>> GetByShippingOrderId([FromRoute]Guid shippingOrderId, CancellationToken cancellationToken)
         {
             try
             {
@@ -126,7 +126,7 @@ namespace Api.Controllers
         /// Видалити об'єкт доставки
         /// </summary>
         [HttpDelete("{id:guid}")]
-        public async Task<ActionResult> Delete(Guid id, CancellationToken cancellationToken)
+        public async Task<ActionResult> Delete([FromRoute]Guid id, CancellationToken cancellationToken)
         {
             try
             {

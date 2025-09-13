@@ -30,8 +30,8 @@ namespace Application.Services
                 var refreshToken = new JwtSecurityToken(
                     issuer: configuration["Jwt:ValidIssuer"],
                     audience: configuration["Jwt:ValidAudience"],
-                    expires: DateTime.Now.AddDays(
-                        double.Parse(configuration["Jwt:RefreshTokenExpiryDays"] ?? "")),
+                    expires: (rememberMe ? DateTime.UtcNow.AddDays(double.Parse(configuration["Jwt:RefreshTokenExpiryDays"] ?? "30"))
+                        : DateTime.UtcNow.AddMinutes(double.Parse(configuration["Jwt:RefreshTokenExpiryMinutes"] ?? "60"))),
                     signingCredentials: new SigningCredentials(
                         new SymmetricSecurityKey(
                             Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
