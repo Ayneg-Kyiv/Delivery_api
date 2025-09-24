@@ -10,6 +10,9 @@ namespace Infrastructure.MappingProfiles
         {
             CreateMap<Article, GetArticleDto>();
             CreateMap<CreateArticleDto, Article>();
+
+            CreateMap<ArticleBlock, GetArticleBlockDto>();
+            CreateMap<CreateArticleBlockDto, ArticleBlock>();
         }
     }
 }

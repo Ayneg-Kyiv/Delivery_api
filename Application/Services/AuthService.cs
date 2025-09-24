@@ -29,7 +29,7 @@ namespace Application.Services
                     return TResponse.Failure(401, "No session on this device");
 
                 var sessionData = await sessionDataRepository.FindAsync
-                    (x => x.RefreshToken == refreshToken, default);
+                    ([x => x.RefreshToken == refreshToken], default);
 
                 if (sessionData == null) return TResponse.Failure(401, "No session on this device");
 

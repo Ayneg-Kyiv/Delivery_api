@@ -32,6 +32,11 @@ namespace Domain.Models.Identity
         [Description("User's profile image Path")]
         public string? ImagePath { get; set; }
 
+        [MaxLength(512)]
+        [Description("Driver license image to verify user, not seen by other")]
+        public string? DriverLicenseImagePath { get; set; }
+
+
         [Description("User's rating, can be used for various purposes like feedback or reputation")]
         [Range(0, 5, ErrorMessage = "Rating must be between 0 and 5.")]
         public float Rating { get; set; } = 0;

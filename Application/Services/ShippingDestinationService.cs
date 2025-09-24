@@ -26,7 +26,7 @@ namespace Application.Services
 
         public async Task<ShippingDestinationDto?> GetByIdAsync(Guid id)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, CancellationToken.None);
+            var entities = await _repository.FindAsync([x => x.Id == id], CancellationToken.None);
             var entity = entities.FirstOrDefault();
             return entity == null ? null : _mapper.Map<ShippingDestinationDto>(entity);
         }
@@ -44,7 +44,7 @@ namespace Application.Services
 
         public async Task<ShippingDestinationDto?> UpdateAsync(Guid id, UpdateShippingDestinationDto updateDto)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, CancellationToken.None);
+            var entities = await _repository.FindAsync([x => x.Id == id], CancellationToken.None);
             var existingEntity = entities.FirstOrDefault();
             if (existingEntity == null)
                 return null;
@@ -58,7 +58,7 @@ namespace Application.Services
 
         public async Task<bool> DeleteAsync(Guid id)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, CancellationToken.None);
+            var entities = await _repository.FindAsync([x => x.Id == id], CancellationToken.None);
             var existingEntity = entities.FirstOrDefault();
             if (existingEntity == null)
                 return false;

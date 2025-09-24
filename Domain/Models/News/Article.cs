@@ -1,5 +1,4 @@
 ﻿using Domain.Models.Abstract;
-using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Models.News
@@ -14,6 +13,10 @@ namespace Domain.Models.News
         [Required]
         public string Author { get; set; } = null!;
 
+        public string? Category { get; set; }
+
         public string? ImagePath { get; set; }
+
+        public virtual ICollection<ArticleBlock> ArticleBlocks { get; set; } = [];
     }
 }

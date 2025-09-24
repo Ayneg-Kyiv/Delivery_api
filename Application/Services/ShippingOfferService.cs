@@ -4,6 +4,7 @@ using Domain.Interfaces.Services;
 using Domain.Models.DTOs.Order;
 using Domain.Models.Orders;
 using Infrastructure.Contexts;
+using System.Linq.Expressions;
 
 namespace Application.Services
 {
@@ -26,20 +27,20 @@ namespace Application.Services
 
         public async Task<ShippingOfferDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.Id == id], cancellationToken);
             var entity = entities.FirstOrDefault();
             return entity == null ? null : _mapper.Map<ShippingOfferDto>(entity);
         }
 
         public async Task<IEnumerable<ShippingOfferDto>> GetByShippingOrderIdAsync(Guid shippingOrderId, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.ShippingOrderId == shippingOrderId, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.ShippingOrderId == shippingOrderId], cancellationToken);
             return _mapper.Map<IEnumerable<ShippingOfferDto>>(entities);
         }
 
         public async Task<IEnumerable<ShippingOfferDto>> GetByCourierIdAsync(Guid courierId, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.CourierId == courierId, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.CourierId == courierId], cancellationToken);
             return _mapper.Map<IEnumerable<ShippingOfferDto>>(entities);
         }
 
@@ -65,7 +66,7 @@ namespace Application.Services
 
         public async Task<bool> UpdateAsync(Guid id, UpdateShippingOfferDto dto, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.Id == id], cancellationToken);
             var entity = entities.FirstOrDefault();
             if (entity == null) return false;
 
@@ -82,7 +83,7 @@ namespace Application.Services
 
         public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.Id == id], cancellationToken);
             var entity = entities.FirstOrDefault();
             if (entity == null) return false;
             return await _repository.DeleteAsync(entity, cancellationToken);
@@ -95,10 +96,13 @@ namespace Application.Services
             Guid? courierId,
             CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(
-                x => (!shippingOrderId.HasValue || x.ShippingOrderId == shippingOrderId.Value) &&
-                     (!courierId.HasValue || x.CourierId == courierId.Value),
-                cancellationToken);
+            List<Expression<Func<ShippingOffer, bool>>> predicates = [];
+            if (shippingOrderId.HasValue)
+                predicates.Add(x => x.ShippingOrderId == shippingOrderId.Value);
+            if (courierId.HasValue) 
+                predicates.Add(x => x.CourierId == courierId.Value);
+
+            var entities = await _repository.FindAsync(predicates, cancellationToken);
 
             // Simulate pagination
             var paginatedEntities = entities.Skip((pageNumber - 1) * pageSize).Take(pageSize);
@@ -108,7 +112,7 @@ namespace Application.Services
 
         public async Task<bool> AcceptOfferAsync(Guid id, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.Id == id], cancellationToken);
             var entity = entities.FirstOrDefault();
             if (entity == null) return false;
 
@@ -120,7 +124,7 @@ namespace Application.Services
 
         public async Task<bool> RejectOfferAsync(Guid id, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.Id == id], cancellationToken);
             var entity = entities.FirstOrDefault();
             if (entity == null) return false;
 

@@ -6,6 +6,7 @@ using Domain.Models.DTOs.Ride.Trip;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace Api.Controllers
 {
@@ -50,9 +51,9 @@ namespace Api.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateTrip([FromBody] CreateTripDto tripDto, CancellationToken cancellationToken)
         {
-            var id = HttpContext.User?.FindFirst(JwtRegisteredClaimNames.NameId)?.Value;
+            var id = HttpContext.User?.Claims.LastOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-            if (id == null )
+            if (id == null)
                 return Unauthorized("Invalid or missing user ID");
 
             tripDto.DriverId = Guid.Parse(id);
@@ -112,7 +113,7 @@ namespace Api.Controllers
         [HttpPost("order/create")]
         public async Task<IActionResult> CreateDeliveryOrder([FromBody] CreateDeliveryOrderDto deliveryOrderDto, CancellationToken cancellationToken)
         {
-            var id = HttpContext.User?.FindFirst(JwtRegisteredClaimNames.NameId)?.Value;
+            var id = HttpContext.User?.Claims.LastOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
             if (id == null)
                 return Unauthorized("Invalid or missing user ID");

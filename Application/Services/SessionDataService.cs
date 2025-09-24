@@ -35,16 +35,20 @@ namespace Application.Services
 
         public async Task<bool> IsSessionExistsAsync(HttpContext context)
         {
-            return await sessionRepository.FindAsync(x => x.RefreshToken
-                == context.Request.Cookies["refreshToken"], default) != null;
+            var refreshToken = context.Request.Cookies["refreshToken"];
+
+            return await sessionRepository.FindAsync([x => x.RefreshToken
+                == refreshToken], default) != null;
         }
 
         public async Task RemoveSessionAsync(HttpContext context)
         {
             try
             {
-                var sessions = await sessionRepository.FindAsync(x => x.RefreshToken
-                    == context.Request.Cookies["refreshToken"], default);
+                var refreshToken = context.Request.Cookies["refreshToken"];
+
+                var sessions = await sessionRepository.FindAsync([x => x.RefreshToken
+                    == refreshToken], default);
 
                 var sessionData = sessions.FirstOrDefault()
                     ?? throw new InvalidOperationException("Session data not found.");
@@ -62,7 +66,7 @@ namespace Application.Services
         {
             try
             {
-                var sessions = await sessionRepository.FindAsync(x => x.RefreshToken == oldToken, default);
+                var sessions = await sessionRepository.FindAsync([x => x.RefreshToken == oldToken], default);
 
                 var sessionData = sessions.FirstOrDefault()
                     ?? throw new InvalidOperationException("Session data not found for the provided token.");

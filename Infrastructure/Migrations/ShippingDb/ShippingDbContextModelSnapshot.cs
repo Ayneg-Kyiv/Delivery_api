@@ -84,6 +84,9 @@ namespace Infrastructure.Migrations.ShippingDb
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Category")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -106,6 +109,39 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.HasKey("Id");
 
                     b.ToTable("Articles");
+                });
+
+            modelBuilder.Entity("Domain.Models.News.ArticleBlock", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
+
+                    b.Property<string>("ImagePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticleId");
+
+                    b.ToTable("ArticleBlocks");
                 });
 
             modelBuilder.Entity("Domain.Models.Orders.ShippingDestination", b =>
@@ -555,13 +591,38 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.ToTable("Trips");
                 });
 
+            modelBuilder.Entity("Domain.Models.Vehicles.DriverApplication", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("VehicleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VehicleId");
+
+                    b.ToTable("DriverApplications");
+                });
+
             modelBuilder.Entity("Domain.Models.Vehicles.Vehicle", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Brand")
                         .HasMaxLength(64)
@@ -572,9 +633,20 @@ namespace Infrastructure.Migrations.ShippingDb
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
+
                     b.Property<string>("ImagePath")
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("ImagePathBack")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Model")
                         .HasMaxLength(64)
@@ -592,6 +664,10 @@ namespace Infrastructure.Migrations.ShippingDb
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
+
                     b.HasKey("Id");
 
                     b.ToTable("Vehicles");
@@ -606,6 +682,17 @@ namespace Infrastructure.Migrations.ShippingDb
                         .IsRequired();
 
                     b.Navigation("ShippingOrder");
+                });
+
+            modelBuilder.Entity("Domain.Models.News.ArticleBlock", b =>
+                {
+                    b.HasOne("Domain.Models.News.Article", "Article")
+                        .WithMany("ArticleBlocks")
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Article");
                 });
 
             modelBuilder.Entity("Domain.Models.Orders.ShippingDestination", b =>
@@ -722,6 +809,22 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.Navigation("EndLocation");
 
                     b.Navigation("StartLocation");
+                });
+
+            modelBuilder.Entity("Domain.Models.Vehicles.DriverApplication", b =>
+                {
+                    b.HasOne("Domain.Models.Vehicles.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("Domain.Models.News.Article", b =>
+                {
+                    b.Navigation("ArticleBlocks");
                 });
 
             modelBuilder.Entity("Domain.Models.Orders.ShippingOrder", b =>
