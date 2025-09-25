@@ -9,7 +9,7 @@ namespace Domain.Models.DTOs.Ride.DeliveryOrder
         public Guid TripId { get; set; }
 
         [Required]
-        public Guid SenderId { get; set; }
+        public Guid? SenderId { get; set; }
 
         [Required]
         public Guid DeliverySlotId { get; set; }

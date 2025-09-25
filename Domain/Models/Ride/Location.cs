@@ -18,5 +18,8 @@ namespace Domain.Models.Ride
 
         public virtual ICollection<DeliveryOrder> DeliveryOrderStartLocations { get; set; } = [];
         public virtual ICollection<DeliveryOrder> DeliveryOrderEndLocations { get; set; } = [];
+
+        public virtual ICollection<DeliveryRequest> DeliveryRequestsStartLocations { get; set; } = [];
+        public virtual ICollection<DeliveryRequest> DeliveryRequestsEndLocations { get; set; } = [];
     }
 }

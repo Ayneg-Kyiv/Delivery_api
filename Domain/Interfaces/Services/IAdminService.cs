@@ -16,5 +16,9 @@ namespace Domain.Interfaces.Services
             Guid applicationId,
             CancellationToken cancellationToken);
 
+        Task<TResponse> RejectDriverLicenseAsync(
+            Guid applicationId,
+            CancellationToken cancellationToken);
+
     }
 }

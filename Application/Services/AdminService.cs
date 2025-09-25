@@ -93,6 +93,15 @@ namespace Application.Services
 
             var applicationsDto = mapper.Map<List<GetDriverApplicationDto>>(applications);
 
+            foreach( var application in applicationsDto)
+            {
+                var user = await userManager.FindByIdAsync(application.UserId.ToString());
+
+                application.ImagePath = user?.ImagePath;
+                application.DriverLicenseImagePath = user?.DriverLicenseImagePath;
+                application.Email = user?.Email;
+            }
+
             var pagination = new Pagination
             {
                 PageNumber = pageNumber,
@@ -135,6 +144,31 @@ namespace Application.Services
                 return TResponse.Failure(500, "Failed to delete the vehicle.");
 
             return TResponse.Successful("Driver application rejected and vehicle deleted successfully.");
+        }
+
+        public async Task<TResponse> RejectDriverLicenseAsync(Guid applicationId, CancellationToken cancellationToken)
+        {
+            if (applicationId == Guid.Empty)
+                return TResponse.Failure(400, "Invalid application ID.");
+
+            var application = await driverApplicationRepository.FindAsync([a => a.Id == applicationId], cancellationToken);
+
+            if (application.First() == null)
+                return TResponse.Failure(404, "Driver application not found.");
+
+            var user = await userManager.FindByIdAsync(application.First().UserId.ToString());
+
+            if (user == null)
+                return TResponse.Failure(404, "User associated with the application not found.");
+
+            user.DriverLicenseImagePath = null;
+
+            var updateUserResult = await userManager.UpdateAsync(user);
+
+            if (!updateUserResult.Succeeded)
+                return TResponse.Failure(500, "Failed to remove driver's license image.");
+
+            return TResponse.Successful("Driver's license image removed successfully.");
         }
     }
 }

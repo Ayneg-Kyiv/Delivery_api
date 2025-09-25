@@ -11,7 +11,6 @@ using Domain.Validators;
 using Infrastructure.Contexts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace Application.Services
@@ -35,6 +34,8 @@ namespace Application.Services
 
                 var user = await applicationUserRepository.FindAsync
                     ([x => x.Email == email], cancellationToken);
+
+                var mappedUser = mapper.Map<IEnumerable<GetMainUserInfoDto>>(user);
 
                 return TResponse.Successful(user);
             }
@@ -285,6 +286,10 @@ namespace Application.Services
                     VehicleId = vehicle.Id
                 };
 
+                var createdDriverApp = await driverApplicationRepository.AddAsync(driverApplication, cancellationToken);
+
+                if (createdDriverApp == false)
+                    return TResponse.Failure(500, "Failed to create driver application");
 
                 return TResponse.Successful("Vehicle added successfully");
             }
@@ -364,55 +369,60 @@ namespace Application.Services
 
         public async Task<TResponse> GetUserVehiclesAsync(HttpContext context, CancellationToken cancellationToken)
         {
-            var id = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var email = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
-            if (id == Guid.Empty.ToString())
+            if(string.IsNullOrEmpty(email))
                 return TResponse.Failure(403, "Access forbidden");
 
-            var user = await userManager.FindByEmailAsync(id ?? "");
+            var user = await userManager.FindByEmailAsync(email ?? "");
             
             if (user == null)
                 return TResponse.Failure(400, "Failed to retrieve user");
             
             var vehicles = await vehicleRepository.FindAsync([v => v.OwnerId == user.Id], cancellationToken);
 
-            var vehiclesDto = mapper.Map<List<VehicleDto>>(vehicles);
-
-            return TResponse.Successful(vehiclesDto, "User vehicles retrieved successfully");
+            return TResponse.Successful(vehicles, "User vehicles retrieved successfully");
         }
 
         public async Task<TResponse> ReturnDriverRequiredData(HttpContext context, CancellationToken cancellationToken)
         {
-            var id = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var email = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (id == Guid.Empty.ToString())
+            if ( string.IsNullOrEmpty(email))
                 return TResponse.Failure(403, "Access forbidden");
 
-            var user = await userManager.FindByEmailAsync(id ?? "");
+            var user = await userManager.FindByEmailAsync(email ?? "");
 
             if (user == null)
                 return TResponse.Failure(400, "Failed to retrieve user");
 
-            var driverPhone = user.PhoneNumber != null;
+            var driverPhone = user.PhoneNumber;
             var driverImage = user.DriverLicenseImagePath != null;
+            var driverProfileImage = user.ImagePath != null;
 
-            return TResponse.Successful(new { driverPhone, driverImage }, "Driver required data retrieved successfully");
+            return TResponse.Successful(new { driverPhone, driverImage, driverProfileImage }, "Driver required data retrieved successfully");
         }
 
-        public async Task<TResponse> SetDriverRequiredData(string phoneNumber, IFormFile Image, HttpContext context, CancellationToken cancellationToken)
+        public async Task<TResponse> SetDriverRequiredData(string? phoneNumber, IFormFile? Image, IFormFile? profileImage, HttpContext context, CancellationToken cancellationToken)
         {
-            var id = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var email = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (id == Guid.Empty.ToString())
+            if (email == Guid.Empty.ToString())
                 return TResponse.Failure(403, "Access forbidden");
 
-            var user = await userManager.FindByIdAsync(id ?? "");
+            var user = await userManager.FindByEmailAsync(email ?? "");
 
             if (user == null)
                 return TResponse.Failure(400, "Failed to retrieve user");
 
-            user.PhoneNumber = phoneNumber;
-            user.DriverLicenseImagePath = await fileService.SaveFileAsync(Image, cancellationToken);
+            if(phoneNumber != null)
+                user.PhoneNumber = phoneNumber;
+            
+            if(Image != null)
+                user.DriverLicenseImagePath = await fileService.SaveFileAsync(Image, cancellationToken);
+
+            if (profileImage != null)
+                user.ImagePath = await fileService.SaveFileAsync(profileImage, cancellationToken);
 
             var result = await userManager.UpdateAsync(user);
 
@@ -420,6 +430,20 @@ namespace Application.Services
                 return TResponse.Failure(500, "Failed to update user data");
 
             return TResponse.Successful("Driver required data set successfully");
+        }
+
+        public async Task<TResponse> GetShortUserDataAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var userArr = await applicationUserRepository.FindAsync([u => u.Id == id], cancellationToken);
+
+            if(userArr == null || !userArr.Any())
+                return TResponse.Failure(404, "User not found");
+
+            var user = userArr.First();
+
+            var shortData = mapper.Map<GetApplicationUserForTripDto>(user);
+
+            return TResponse.Successful(shortData, "Short user data retrieved successfully");
         }
     }
 }

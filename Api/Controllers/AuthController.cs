@@ -1,6 +1,8 @@
 ﻿using Domain.Interfaces.Services.Identity;
+using Domain.Models.DTOs.Auth;
 using Domain.Models.DTOs.Identity;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -9,6 +11,16 @@ namespace Api.Controllers
     [ApiController]
     public class AuthController(IAuthService authService) : ControllerBase
     {
+        [HttpPost("google-authenticate")]
+        public async Task<IActionResult> GoogleAuthenticate([FromBody] GoogleAuthRequest request)
+        {
+            var result = await authService.GoogleAuthenticateWithTokenAsync(request, HttpContext);
+
+            if (result.Success) return Ok(result);
+
+            return BadRequest(result);
+        }
+
         [HttpPost("signin")]
         public async Task<IActionResult> Login([FromBody] SigninDTO request)
         {

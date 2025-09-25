@@ -1,4 +1,5 @@
 using Api.Handlers;
+using Api.Hubs;
 using Api.Providers;
 using Application;
 using Application.Middleware;
@@ -6,12 +7,15 @@ using Domain.Models.Identity;
 using Domain.Options;
 using Infrastructure.Contexts;
 using Infrastructure.Seeds;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,14 +26,27 @@ builder.Services.Configure<ConnectionStringOptions>(
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-//builder.Services.AddCors();
+builder.Services.AddCors();
 
+builder.Services.AddSwaggerGen(c =>
+{
+    // Other Swagger configurations
+    c.OperationFilter<FileUploadOperationFilter>();
 
-builder.Services.AddSwaggerGen();
+    // Configure correct schema generation for IFormFile
+    c.MapType<IFormFile>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Format = "binary"
+    });
+});
 
 builder.Services.AddAntiforgery(options =>
 {
@@ -92,19 +109,31 @@ builder.Services.AddAuthentication(options =>
             ClockSkew = TimeSpan.FromMinutes(1),
             RequireExpirationTime = true
         };
+    })
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Google:ClientSecret"];
+        options.CallbackPath = "/api/auth/google-callback";
+        options.SaveTokens = true;
     });
 
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, DynamicPolicyProvider>();
 builder.Services.AddSingleton<IAuthorizationHandler, DynamicRoleHandler>();
 
+builder.Services.AddSignalR();
+
 
 var app = builder.Build();
+
+app.MapHub<MessagingHub>("/messagingHub");
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
 
     app.UseStaticFiles(new StaticFileOptions()
     {
@@ -115,8 +144,8 @@ if (app.Environment.IsDevelopment())
 
     app.UseCors(options =>
     {
-        options.WithOrigins("https://delivery-web-client-ovube2lsj-yevhens-projects-fd53a482.vercel.app/",
-              "http://delivery-web-client-ovube2lsj-yevhens-projects-fd53a482.vercel.app/")
+        options.WithOrigins("https://localhost:3000",
+              "http://localhost:3000")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -124,37 +153,36 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    //app.UseCors(options =>
-    //{
-
-    //    options.WithOrigins("https://delivery-web-client-ovube2lsj-yevhens-projects-fd53a482.vercel.app/",
-    //          "http://delivery-web-client-ovube2lsj-yevhens-projects-fd53a482.vercel.app/")
-    //          .AllowAnyHeader()
-    //          .AllowAnyMethod()
-    //          .AllowCredentials();
-    //});
+    app.UseCors(options =>
+    {
+        options.WithOrigins("https://delivery-web-client.vercel.app",
+              "http://delivery-web-client.vercel.app")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
 }
 
-    using (var scope = app.Services.CreateScope())
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
     {
-        var services = scope.ServiceProvider;
-        try
-        {
-            var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-            await ApplicationUserSeed.SeedRolesAsync(roleManager);
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+        await ApplicationUserSeed.SeedRolesAsync(roleManager);
 
-            var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-            await ApplicationUserSeed.SeedUserAsync(userManager);
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        await ApplicationUserSeed.SeedUserAsync(userManager);
 
-            // Додаємо Seed для ShippingOrder
-            var shippingDbContext = services.GetRequiredService<ShippingDbContext>();
-            await ShippingOrderSeed.SeedAsync(shippingDbContext);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
-        }
+        // Додаємо Seed для ShippingOrder
+        var shippingDbContext = services.GetRequiredService<ShippingDbContext>();
+        await ShippingOrderSeed.SeedAsync(shippingDbContext);
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+    }
+}
 
 app.UseCsrfProtection();
 
@@ -164,5 +192,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapOpenApi();
 
 app.Run();

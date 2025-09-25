@@ -1,4 +1,7 @@
 ﻿using Application.DTOs.Vehicles;
+using Domain.Models.Vehicles;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Models.DTOs.Vehicles
 {
@@ -8,6 +11,16 @@ namespace Domain.Models.DTOs.Vehicles
         public Guid UserId { get; set; }
 
         public Guid VehicleId { get; set; }
-        public VehicleDto Vehicle { get; set; } = null!;
+        public Vehicle Vehicle { get; set; } = null!;
+
+        [MaxLength(512)]
+        [Description("User's profile image Path")]
+        public string? ImagePath { get; set; }
+
+        [MaxLength(512)]
+        [Description("Driver license image to verify user, not seen by other")]
+        public string? DriverLicenseImagePath { get; set; }
+
+        public string? Email { get; set; }
     }
 }

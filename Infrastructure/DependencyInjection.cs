@@ -1,4 +1,5 @@
-﻿using Domain;
+﻿using Application.MappingProfiles;
+using Domain;
 using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services;
 using Domain.Options;
@@ -48,6 +49,10 @@ namespace Infrastructure
                 cfg.AddProfile(new LocationProfile());
                 cfg.AddProfile(new DeliverySlotProfile());
                 cfg.AddProfile(new TripProfile());
+                cfg.AddProfile(new VehicleProfile());
+                cfg.AddProfile(new DeliveryRequestProfile());
+                cfg.AddProfile(new DeliveryOfferProfile());
+                cfg.AddProfile(new MessageProfile());
             });
 
             return services;

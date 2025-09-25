@@ -8,6 +8,7 @@ namespace Domain.Interfaces.Services.Identity
     public interface IAccountService
     {
         Task<TResponse> GetUserDataAsync(HttpContext context, CancellationToken cancellationToken);
+        Task<TResponse> GetShortUserDataAsync(Guid id, CancellationToken cancellationToken);
 
         Task<TResponse> ChangePasswordAsync(ChangePasswordDTO changePassword, HttpContext context);
         Task<TResponse> ChangeUserDataAsync(ChangeUserDataDTO changeUserData, HttpContext context);
@@ -22,6 +23,6 @@ namespace Domain.Interfaces.Services.Identity
         Task<TResponse> DeleteVehicleAsync(Guid id, CancellationToken cancellationToken);
         Task<TResponse> GetUserVehiclesAsync(HttpContext context, CancellationToken cancellationToken);
         Task<TResponse> ReturnDriverRequiredData(HttpContext context, CancellationToken cancellationToken);
-        Task<TResponse> SetDriverRequiredData(string phoneNumber, IFormFile Image, HttpContext context, CancellationToken cancellationToken);
+        Task<TResponse> SetDriverRequiredData(string? phoneNumber, IFormFile? Image, IFormFile? profileImage, HttpContext context, CancellationToken cancellationToken);
     }
 }

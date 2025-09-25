@@ -3,14 +3,21 @@ using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services;
 using Domain.Models.Abstract;
 using Domain.Models.DTOs;
+using Domain.Models.DTOs.Identity;
+using Domain.Models.DTOs.Reviews;
+using Domain.Models.DTOs.Ride.DeliveryOffer;
 using Domain.Models.DTOs.Ride.DeliveryOrder;
+using Domain.Models.DTOs.Ride.DeliveryRequest;
 using Domain.Models.DTOs.Ride.DeliverySlot;
 using Domain.Models.DTOs.Ride.Location;
 using Domain.Models.DTOs.Ride.Trip;
 using Domain.Models.Identity;
+using Domain.Models.Reviews;
 using Domain.Models.Ride;
 using Infrastructure.Contexts;
+using Microsoft.AspNetCore.Http;
 using System.Linq.Expressions;
+using System.Security.Claims;
 
 namespace Application.Services
 {
@@ -18,10 +25,12 @@ namespace Application.Services
                              IBaseRepository<DeliveryOrder, ShippingDbContext> deliveryOrderRepository,
                              IBaseRepository<DeliverySlot, ShippingDbContext> deliverySlotRepository,
                              IBaseRepository<Location, ShippingDbContext> locationRepository,
+                             IBaseRepository<Review, ShippingDbContext> reviewRepository,
                              IBaseRepository<ApplicationUser, IdentityDbContext> userRepository,
                              IMapper mapper) : ITripService
     {
         public async Task<TResponse> GetTripsBatchAsync(
+            bool isCompleted,
             string? cityFrom,
             string? cityTo,
             decimal? priceFrom,
@@ -36,14 +45,17 @@ namespace Application.Services
         {
             List<Expression<Func<Trip, bool>>> predicate = [];
 
+            predicate.Add(t => !t.IsCompleted);
+            predicate.Add(t => !t.IsStarted);
+
             if (!string.IsNullOrEmpty(cityFrom))
                 predicate.Add(t => t.StartLocation.City == cityFrom);
             if (!string.IsNullOrEmpty(cityTo))
                 predicate.Add(t => t.EndLocation.City == cityTo);
             if (dateFrom != null)
-                predicate.Add(t => t.StartLocation.DateTime == dateFrom);
+                predicate.Add(t => t.StartLocation.DateTime.Date == dateFrom.Value.Date);
             if (dateTo != null)
-                predicate.Add(t => t.EndLocation.DateTime == dateTo);
+                predicate.Add(t => t.EndLocation.DateTime.Date == dateTo.Value.Date);
             if (priceFrom != null)
                 predicate.Add(t => t.Slots.Any(s => s.ApproximatePrice >= priceFrom));
             if (priceTo != null)
@@ -71,6 +83,16 @@ namespace Application.Services
 
             var tripDtos = mapper.Map<List<GetTripDto>>(trips);
 
+            foreach (var trip in tripDtos)
+            {
+                var user = await userRepository.FindAsync([u => u.Id == trip.DriverId], default);
+
+                trip.Driver = mapper.Map<GetApplicationUserForTripDto>(user.FirstOrDefault());
+            }
+
+            if(driverRatingFrom != null)
+                tripDtos = [..tripDtos.Where(t => t.Driver.Rating >= driverRatingFrom)];
+
             var pagination = new Pagination
             {
                 PageNumber = pageNumber,
@@ -86,6 +108,88 @@ namespace Application.Services
 
             return TResponse.Successful(PaginatedPage, "Trips retrieved successfully.");
         }
+
+        public async Task<TResponse> GetTripsBatchByDriverIdWithOrdersAsync(Guid? id, bool isCompleteed, string? cityFrom, string? cityTo, decimal? priceFrom, decimal? priceTo, DateTime? dateFrom, DateTime? dateTo, double? driverRatingFrom, string? cargoType, int pageNumber, int pageSize, HttpContext context,CancellationToken cancellationToken)
+        {
+            List<Expression<Func<Trip, bool>>> predicate = [];
+
+            if(id == null)
+                id = Guid.Parse(context.User?.Claims.LastOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "");
+
+            if (id == null)
+                return TResponse.Failure(401, "Unauthorized");
+
+            predicate.Add(t => t.DriverId == id);
+
+            if (!string.IsNullOrEmpty(cityFrom))
+                predicate.Add(t => t.StartLocation.City == cityFrom);
+            if (!string.IsNullOrEmpty(cityTo))
+                predicate.Add(t => t.EndLocation.City == cityTo);
+            if (dateFrom != null)
+                predicate.Add(t => t.StartLocation.DateTime.Date == dateFrom.Value.Date);
+            if (dateTo != null)
+                predicate.Add(t => t.EndLocation.DateTime.Date == dateTo.Value.Date);
+            if (priceFrom != null)
+                predicate.Add(t => t.Slots.Any(s => s.ApproximatePrice >= priceFrom));
+            if (priceTo != null)
+                predicate.Add(t => t.Slots.Any(s => s.ApproximatePrice <= priceTo));
+            if (cargoType != null)
+                predicate.Add(t => t.Slots.Any(s => s.CargoSlotTypeName == cargoType));
+
+            var totalCount = await tripRepository.GetTotalCountAsync(predicate, cancellationToken,
+                [
+                    t => t.StartLocation,
+                    t => t.EndLocation,
+                    t => t.Slots,
+                    t => t.Orders
+                ]);
+
+            var trips = await tripRepository.FindWithIncludesAndPaginationAsync(
+                predicate,
+                pageNumber,
+                pageSize,
+                cancellationToken,
+                [
+                    t => t.StartLocation,
+                    t => t.EndLocation,
+                    t => t.Slots,
+                    t => t.Orders
+                ]);
+
+            var tripDtos = mapper.Map<List<GetTripDto>>(trips);
+
+            foreach (var trip in tripDtos)
+            {
+                var user = await userRepository.FindAsync([u => u.Id == trip.DriverId], default);
+
+                trip.Driver = mapper.Map<GetApplicationUserForTripDto>(user.FirstOrDefault());
+            }
+
+            foreach( var trip in tripDtos)
+            {
+                foreach (var order in trip.DeliveryOrders)
+                {
+                    var customer = await userRepository.FindAsync([u => u.Id == order.SenderId], default);
+                    order.Sender = mapper.Map<GetApplicationUserForTripDto>(customer.FirstOrDefault());
+                }
+            }
+
+            var pagination = new Pagination
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
+
+            var PaginatedPage = new PaginatedPage
+            {
+                Pagination = pagination,
+                Data = tripDtos
+            };
+
+            return TResponse.Successful(PaginatedPage, "Trips retrieved successfully.");
+        }
+
         public async Task<TResponse> CreateTripAsync(CreateTripDto tripDto, CancellationToken cancellationToken)
         {
             if (tripDto == null)
@@ -116,6 +220,7 @@ namespace Application.Services
 
             trip.StartLocationId = startLocation.Id;
             trip.EndLocationId = endLocation.Id;
+            trip.Slots = null; // Slots will be created separately
 
             var createdTrip = await tripRepository.AddAsync(trip, cancellationToken);
             if (createdTrip == false)
@@ -148,12 +253,52 @@ namespace Application.Services
         public async Task<TResponse> GetTripByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var trip = await tripRepository.FindWithIncludesAsync([t => t.Id == id], cancellationToken,
-                [t => t.StartLocation, t => t.EndLocation, t => t.Slots, t => t.Orders]);
+                [t => t.StartLocation, t => t.EndLocation, t => t.Slots, t => t.Vehicle]);
 
             if (trip == null || !trip.Any())
                 return TResponse.Failure(404, "Trip not found.");
 
             var tripDto = mapper.Map<GetTripDto>(trip.First());
+
+            var user = await userRepository.FindAsync([u => u.Id == tripDto.DriverId], cancellationToken);
+
+            var reviews = await reviewRepository.FindWithIncludesAndPaginationAsync([r => r.UserId == tripDto.DriverId], 1, 10, cancellationToken, []);
+
+            tripDto.Driver = mapper.Map<GetApplicationUserForTripDto>(user.FirstOrDefault());
+            tripDto.Driver.Reviews = mapper.Map<List<ReviewDto>>(reviews);
+
+            //Select where slots isAvailable = true
+            tripDto.DeliverySlots = [.. tripDto.DeliverySlots.Where(s => s.IsAvailable)];
+
+
+            return TResponse.Successful(tripDto, "Trip retrieved successfully.");
+        }
+
+        public async Task<TResponse> GetTripByIdWithOrdersAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var trip = await tripRepository.FindWithIncludesAsync([t => t.Id == id], cancellationToken,
+                [t => t.StartLocation, t => t.EndLocation, t => t.Slots, t => t.Orders, t => t.Vehicle]);
+
+            if (trip == null || !trip.Any())
+                return TResponse.Failure(404, "Trip not found.");
+
+            var tripDto = mapper.Map<GetTripDto>(trip.First());
+
+            var user = await userRepository.FindAsync([u => u.Id == tripDto.DriverId], default);
+
+            tripDto.Driver = mapper.Map<GetApplicationUserForTripDto>(user.FirstOrDefault());
+
+            //Select where slots isAvailable = true
+            tripDto.DeliverySlots = [.. tripDto.DeliverySlots.Where(s => s.IsAvailable)];
+
+            tripDto.DeliveryOrders = [.. tripDto.DeliveryOrders.Where(s => !s.IsDeclined)];
+
+            foreach (var order in tripDto.DeliveryOrders)
+            {
+                var sender = await userRepository.FindAsync([u => u.Id == order.SenderId], default);
+
+                order.Sender = mapper.Map<GetApplicationUserForTripDto>(sender.FirstOrDefault());
+            }
 
             return TResponse.Successful(tripDto, "Trip retrieved successfully.");
         }
@@ -332,6 +477,52 @@ namespace Application.Services
             return TResponse.Failure(400, "Invalid Trip ID or User ID.");
         }
 
+        public async Task<TResponse> GetDeliveryOrdersBatchBySenderIdAsync(
+            Guid? tripId,
+            Guid? userId,
+            int pageNumber,
+            int pageSize,
+            HttpContext context,
+            CancellationToken cancellationToken)
+        {
+            if (userId == null)
+                userId = Guid.Parse(context.User?.Claims.LastOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "");
+
+            var totalCount = await deliveryOrderRepository.GetTotalCountAsync([o => o.SenderId == userId], cancellationToken);
+
+            var orders = await deliveryOrderRepository.FindWithIncludesAndPaginationAsync(
+                [o => o.SenderId == userId], 
+                pageNumber, pageSize, cancellationToken,
+                [o => o.StartLocation, o => o.EndLocation, o => o.DeliverySlot]);
+
+            var orderDtos = mapper.Map<List<GetDeliveryOrderDto>>(orders);
+
+            foreach (var order in orderDtos)
+            {
+                var sender = await userRepository.FindAsync([u => u.Id == order.SenderId], default);
+                order.Sender = mapper.Map<GetApplicationUserForTripDto>(sender.FirstOrDefault());
+
+                var trip = await tripRepository.FindAsync([t => t.Id == order.TripId], default);
+                var driver = await userRepository.FindAsync([u => u.Id == trip.First().DriverId], default);
+
+                order.Driver =  mapper.Map<GetApplicationUserForTripDto>(driver.FirstOrDefault());
+            }
+
+            var pagination = new Pagination
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
+
+            var paginatedPage = new PaginatedPage
+            {
+                Pagination = pagination,
+                Data = orderDtos
+            };
+
+            return TResponse.Successful(paginatedPage, "Trips retrieved successfully.");
+        }
         public async Task<TResponse> SetTripAsCompletedAsync(Guid id, CancellationToken cancellationToken)
         {
             var trip = await tripRepository.FindAsync([t => t.Id == id], cancellationToken);
@@ -391,6 +582,119 @@ namespace Application.Services
                 return TResponse.Failure(500, "Failed to update delivery order.");
             
             return TResponse.Successful(updatedOrder, "Delivery order marked as delivered successfully.");
+        }
+
+        public async Task<TResponse> GetAllUniqueLocations(CancellationToken cancellationToken)
+        {
+            var uniqueLocations = await locationRepository.FindAllUniqueDataInPropertiesAsync([],
+                l => l.City, cancellationToken);
+
+            return TResponse.Successful(uniqueLocations, "Unique locations retrieved successfully.");
+        }
+
+        
+        public async Task<TResponse> GetTripDetailsByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            if( id == Guid.Empty)
+                return TResponse.Failure(400, "Trip ID must be provided.");
+
+            var trip = await tripRepository.FindWithIncludesAsync([t => t.Id == id], cancellationToken,
+                [
+                    t => t.StartLocation,
+                    t => t.EndLocation,
+                    t => t.Slots
+                ]);
+
+            if (trip == null || !trip.Any())
+                return TResponse.Failure(404, "Trip not found.");
+
+            var tripDto = mapper.Map<GetTripDto>(trip.First());
+
+            return TResponse.Successful(tripDto, "Trip details retrieved successfully.");
+        }
+
+        public async Task<TResponse> SetTripAsStartedAsync(Guid tripId, CancellationToken cancellationToken)
+        {
+            var trip = await tripRepository.FindAsync([t => t.Id == tripId], cancellationToken);
+
+            if (trip == null || !trip.Any())
+                return TResponse.Failure(404, "Trip not found.");
+
+            var orders = await deliveryOrderRepository.FindAsync([o => o.TripId == trip.First().Id], cancellationToken);
+
+            trip.First().IsStarted = true;
+            var updatedTrip = await tripRepository.UpdateAsync(trip.First(), cancellationToken);
+
+            if (updatedTrip == false)
+                return TResponse.Failure(500, "Failed to update trip.");
+
+            return TResponse.Successful(updatedTrip, "Trip marked as completed successfully.");
+        }
+
+        public async Task<TResponse> SetAsAcceptedAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var order = await deliveryOrderRepository.FindAsync([o => o.Id == id], cancellationToken);
+
+            if (order == null || !order.Any())
+                return TResponse.Failure(404, "Delivery order not found.");
+
+            if (order.First().IsDelivered)
+                return TResponse.Failure(400, "Delivery order is already marked as delivered.");
+
+            if (order.First().IsPickedUp)
+                return TResponse.Failure(400, "Delivery order must be picked up before it can be delivered.");
+
+            order.First().IsAccepted = true;
+
+            var updatedOrder = await deliveryOrderRepository.UpdateAsync(order.First(), cancellationToken);
+            if (updatedOrder == false)
+                return TResponse.Failure(500, "Failed to update delivery order.");
+
+            return TResponse.Successful(updatedOrder, "Delivery order marked as delivered successfully.");
+        }
+
+        public async Task<TResponse> SetAsDeclinedAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var order = await deliveryOrderRepository.FindAsync([o => o.Id == id], cancellationToken);
+
+            if (order == null || !order.Any())
+                return TResponse.Failure(404, "Delivery order not found.");
+
+            if (order.First().IsDelivered)
+                return TResponse.Failure(400, "Delivery order is already marked as delivered.");
+
+            if (!order.First().IsPickedUp)
+                return TResponse.Failure(400, "Delivery order must be picked up before it can be delivered.");
+
+            order.First().IsDeclined = true;
+
+            var updatedOrder = await deliveryOrderRepository.UpdateAsync(order.First(), cancellationToken);
+            if (updatedOrder == false)
+                return TResponse.Failure(500, "Failed to update delivery order.");
+
+            return TResponse.Successful(updatedOrder, "Delivery order marked as delivered successfully.");
+        }
+
+        public async Task<TResponse> GetDeliveryOrderByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var order = await deliveryOrderRepository.FindWithIncludesAsync([o => o.Id == id], cancellationToken,
+                [o => o.StartLocation, o => o.EndLocation, o => o.DeliverySlot]);
+
+            if (order == null || !order.Any())
+                return TResponse.Failure(404, "Delivery order not found.");
+
+            var orderDto = mapper.Map<GetDeliveryOrderDto>(order.First());
+
+            var sender = await userRepository.FindAsync([u => u.Id == orderDto.SenderId], default);
+            
+            orderDto.Sender = mapper.Map<GetApplicationUserForTripDto>(sender.FirstOrDefault());
+
+            var trip = await tripRepository.FindAsync([t => t.Id == orderDto.TripId], default);
+            var driver = await userRepository.FindAsync([u => u.Id == trip.First().DriverId], default);
+
+            orderDto.Driver = mapper.Map<GetApplicationUserForTripDto>(driver.FirstOrDefault());
+
+            return TResponse.Successful(orderDto, "Delivery order retrieved successfully.");
         }
     }
 }
