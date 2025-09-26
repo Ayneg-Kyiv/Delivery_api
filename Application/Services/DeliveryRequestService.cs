@@ -47,9 +47,9 @@ namespace Application.Services
             if(!string.IsNullOrEmpty(cityTo))
                 predicates.Add(r => r.EndLocation.City == cityTo);
             if(dateFrom != null)
-                predicates.Add(r => r.StartLocation.DateTime == dateFrom);
+                predicates.Add(r => r.StartLocation.DateTime.Date == dateFrom.Value.Date);
             if(dateTo != null)
-                predicates.Add(r => r.EndLocation.DateTime == dateTo);
+                predicates.Add(r => r.EndLocation.DateTime.Date == dateTo.Value.Date);
             if (isPickedUp)
                 predicates.Add(r => r.IsPickedUp);
             if (isDelivered)

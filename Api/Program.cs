@@ -24,6 +24,9 @@ builder.Services.AddApplication(builder.Configuration);
 builder.Services.Configure<ConnectionStringOptions>(
     builder.Configuration.GetSection("ConnectionStringOptions"));
 
+builder.Services.Configure<GoogleAuthOptions>(
+    builder.Configuration.GetSection("Google"));
+
 // Add services to the container.
 
 

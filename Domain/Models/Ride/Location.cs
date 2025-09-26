@@ -5,8 +5,10 @@ namespace Domain.Models.Ride
     public class Location: BaseModel
     {
         public string Country { get; set; } = null!;
+        public string? State { get; set; }
         public string City { get; set; } = null!;
         public string Address { get; set; } = null!;
+        public string? HouseNumber { get; set; }
 
         public DateTime DateTime { get; set; }
 

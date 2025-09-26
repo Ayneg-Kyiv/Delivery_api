@@ -5,11 +5,13 @@ using Domain.Models.DTOs;
 using Domain.Models.DTOs.Auth;
 using Domain.Models.DTOs.Identity;
 using Domain.Models.Identity;
+using Domain.Options;
 using Domain.Validators;
 using Google.Apis.Auth;
 using Infrastructure.Contexts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
 namespace Application.Services
 {
@@ -18,8 +20,11 @@ namespace Application.Services
                              ISessionDataService sessionDataService,
                              IBaseRepository<SessionData, IdentityDbContext> sessionDataRepository,
                              ITokenService tokenService,
-                             IMailService mailService) : IAuthService
+                             IMailService mailService,
+                             IOptions<GoogleAuthOptions> googleAuthOptions) : IAuthService
     {
+        private readonly GoogleAuthOptions _googleAuthOptions = googleAuthOptions.Value;
+
         public async Task<TResponse> GoogleAuthenticateWithTokenAsync(GoogleAuthRequest request, HttpContext context)
         {
             try
@@ -27,7 +32,9 @@ namespace Application.Services
                 // Verify the Google ID token
                 var validationSettings = new GoogleJsonWebSignature.ValidationSettings
                 {
-                    Audience = new[] { "558002760180-fnqit0r2l1jrqt34u0103gcosfmq67ig.apps.googleusercontent.com" } // Your client ID
+                    // Get this from IConfiguration in real application
+
+                    Audience = [ _googleAuthOptions.ClientId ] // Your client ID
                 };
 
                 var payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, validationSettings);

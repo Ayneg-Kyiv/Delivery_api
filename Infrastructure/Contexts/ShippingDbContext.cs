@@ -7,7 +7,7 @@ using Domain.Models.Ride;
 using Domain.Models.Vehicles;
 using Infrastructure.Contexts.Extensions;
 using Microsoft.EntityFrameworkCore;
-using System;
+
 namespace Infrastructure.Contexts
 {
     public class ShippingDbContext(DbContextOptions<ShippingDbContext> options) 
