@@ -2,12 +2,16 @@
 using Domain.Interfaces.Services;
 using Domain.Interfaces.Services.Identity;
 using Domain.Models.DTOs;
+using Domain.Models.DTOs.Auth;
 using Domain.Models.DTOs.Identity;
 using Domain.Models.Identity;
+using Domain.Options;
 using Domain.Validators;
+using Google.Apis.Auth;
 using Infrastructure.Contexts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
 namespace Application.Services
 {
@@ -16,8 +20,82 @@ namespace Application.Services
                              ISessionDataService sessionDataService,
                              IBaseRepository<SessionData, IdentityDbContext> sessionDataRepository,
                              ITokenService tokenService,
-                             IMailService mailService) : IAuthService
+                             IMailService mailService,
+                             IOptions<GoogleAuthOptions> googleAuthOptions) : IAuthService
     {
+        private readonly GoogleAuthOptions _googleAuthOptions = googleAuthOptions.Value;
+
+        public async Task<TResponse> GoogleAuthenticateWithTokenAsync(GoogleAuthRequest request, HttpContext context)
+        {
+            try
+            {
+                // Verify the Google ID token
+                var validationSettings = new GoogleJsonWebSignature.ValidationSettings
+                {
+                    // Get this from IConfiguration in real application
+
+                    Audience = [ _googleAuthOptions.ClientId ] // Your client ID
+                };
+
+                var payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, validationSettings);
+
+                if (payload == null)
+                    return TResponse.Failure(401, "Invalid Google token");
+
+                var email = payload.Email;
+                var firstName = payload.GivenName;
+                var lastName = payload.FamilyName;
+                var name = payload.Name;
+
+                // Check if user exists
+                var user = await userManager.FindByEmailAsync(email);
+
+                if (user == null)
+                {
+                    // Create new user
+                    user = new ApplicationUser
+                    {
+                        UserName = email,
+                        Email = email,
+                        FirstName = firstName,
+                        LastName = lastName,
+                        EmailConfirmed = true // Google already verified the email
+                    };
+
+                    var result = await userManager.CreateAsync(user);
+
+                    if (!result.Succeeded)
+                        return TResponse.Failure(500, "Failed to create user from Google account");
+
+                    // Add user role
+                    if (!await roleManager.RoleExistsAsync("User"))
+                        await roleManager.CreateAsync(new IdentityRole<Guid>("User"));
+
+                    await userManager.AddToRoleAsync(user, "User");
+                }
+
+                // Generate JWT token for the user
+                var roles = await userManager.GetRolesAsync(user);
+
+                await tokenService.GetRefreshTokenAsync(user, roles, context, true);
+                
+                var token = await tokenService.GetTokenAsync(user, roles);
+
+                return TResponse.Successful(new
+                {
+                    id = user.Id,
+                    name = user.UserName,
+                    email = user.Email,
+                    token,
+                    roles
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in Google token authentication: {ex.Message}");
+                return TResponse.Failure(500, $"An error occurred during Google authentication: {ex.Message}");
+            }
+        }
 
         public async Task<TResponse> RefreshSessionAsync(HttpContext context)
         {
@@ -214,22 +292,22 @@ namespace Application.Services
 
                 var user = await userManager.FindByEmailAsync(email);
                 if (user == null) return TResponse.Failure(404, "User not found");
-                
+
                 var confirmationToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
-                
+
                 var confirmationLink = $"https://localhost:3000/confirm-email?token={Uri.EscapeDataString(confirmationToken)}&email={Uri.EscapeDataString(user.Email!)}";
-                
+
                 await mailService.SendEmailAsync(
                     user.Email ?? throw new Exception("Email is null"),
                     "Resend Email Confirmation",
                     $"Please confirm your email by clicking this link: <a href=\"{confirmationLink}\">Confirm Email</a>");
-                
+
                 return TResponse.Successful("Confirmation email sent successfully");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error resending confirmation email: {ex.Message}");
-                
+
                 return TResponse.Failure(500, $"An error occurred while resending confirmation email: {ex.Message}");
             }
         }

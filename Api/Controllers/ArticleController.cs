@@ -14,7 +14,7 @@ namespace Api.Controllers
         [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
         [HttpPost("create")]
-        public async Task<IActionResult> CreateArticle([FromBody] CreateArticleDto article, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateArticle([FromForm] CreateArticleDto article, CancellationToken cancellationToken)
         {
             var result = await articleService.CreateArticleAsync(article, cancellationToken);
 
@@ -27,7 +27,7 @@ namespace Api.Controllers
         [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
         [HttpPut("update")]
-        public async Task<IActionResult> UpdateArticle([FromBody] UpdateArticleDto article, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateArticle([FromForm] UpdateArticleDto article, CancellationToken cancellationToken)
         {
             var result = await articleService.UpdateArticleAsync(article, cancellationToken);
 
@@ -103,7 +103,7 @@ namespace Api.Controllers
         [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
         [HttpPost("block/create")]
-        public async Task<IActionResult> AddArticleBlock([FromBody] CreateArticleBlockDto articleBlock, CancellationToken cancellationToken)
+        public async Task<IActionResult> AddArticleBlock([FromForm] CreateArticleBlockDto articleBlock, CancellationToken cancellationToken)
         {
             var result = await articleService.AddArticleBlockAsync(articleBlock, cancellationToken);
 
@@ -116,7 +116,7 @@ namespace Api.Controllers
         [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
         [HttpPut("block/update")]
-        public async Task<IActionResult> UpdateArticleBlock([FromBody] UpdateArticleBlockDto articleBlock, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateArticleBlock([FromForm] UpdateArticleBlockDto articleBlock, CancellationToken cancellationToken)
         {
             var result = await articleService.UpdateArticleBlockAsync(articleBlock, cancellationToken);
 

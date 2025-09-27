@@ -3,7 +3,6 @@ using Domain.Interfaces.Services.Identity;
 using Domain.Models.DTOs.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace Api.Controllers
 {
@@ -19,6 +18,17 @@ namespace Api.Controllers
 
             if (result.Success) return Ok(result);
 
+            return BadRequest(result);
+        }
+
+        [Authorize(Roles = "User")]
+        [HttpGet("short/{id}")]
+        public async Task<IActionResult> GetShortUserData([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var result = await service.GetShortUserDataAsync(id, cancellationToken);
+
+            if (result.Success) return Ok(result);
+            
             return BadRequest(result);
         }
 
@@ -47,7 +57,7 @@ namespace Api.Controllers
         [Authorize(Roles = "User")]
         [Consumes("multipart/form-data")]
         [HttpPut("update-profile-image")]
-        public async Task<IActionResult> UpdateProfileImage([FromBody] UpdateProfileImageDTO request, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateProfileImage([FromForm] UpdateProfileImageDTO request, CancellationToken cancellationToken)
         {
             var result = await service.ChangeProfileImageAsync(request, HttpContext, cancellationToken);
 
@@ -78,7 +88,7 @@ namespace Api.Controllers
         [Authorize(Roles = "User")]
         [Consumes("multipart/form-data")]
         [HttpPost("add-vehicle")]
-        public async Task<IActionResult> AddVehicle([FromBody] CreateVehicleDto request, CancellationToken cancellationToken)
+        public async Task<IActionResult> AddVehicle([FromForm] CreateVehicleDto request, CancellationToken cancellationToken)
         {
             var result = await service.AddVehicleAsync(request, HttpContext, cancellationToken);
 
@@ -89,7 +99,7 @@ namespace Api.Controllers
 
         [Authorize(Roles = "User")]
         [HttpPut("update-vehicle")]
-        public async Task<IActionResult> UpdateVehicle([FromBody] UpdateVehicleDto request, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateVehicle([FromForm] UpdateVehicleDto request, CancellationToken cancellationToken)
         {
             var result = await service.UpdateVehicleAsync(request, HttpContext, cancellationToken);
 
@@ -134,9 +144,9 @@ namespace Api.Controllers
         [Authorize(Roles = "User")]
         [Consumes("multipart/form-data")]
         [HttpPost("set-driver-required-data")]
-        public async Task<IActionResult> SetDriverRequiredData([FromQuery] string phoneNumber, [FromBody] IFormFile image, CancellationToken cancellationToken)
+        public async Task<IActionResult> SetDriverRequiredData([FromForm]AddDriverDataDto dataDto, CancellationToken cancellationToken)
         {
-            var result = await service.SetDriverRequiredData(phoneNumber, image, HttpContext, cancellationToken);
+            var result = await service.SetDriverRequiredData(dataDto.PhoneNumber, dataDto.Image, dataDto.ProfileImage, HttpContext, cancellationToken);
 
             if (result.Success) return Ok(result);
 

@@ -1,6 +1,7 @@
 using AutoMapper;
 using Application.DTOs.Vehicles;
 using Domain.Models.Vehicles;
+using Domain.Models.DTOs.Vehicles;
 
 namespace Application.MappingProfiles
 {
@@ -17,6 +18,8 @@ namespace Application.MappingProfiles
             // Update DTO → Domain
             CreateMap<UpdateVehicleDto, Vehicle>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<DriverApplication, GetDriverApplicationDto>();
         }
     }
 }

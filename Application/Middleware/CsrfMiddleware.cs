@@ -11,6 +11,21 @@ namespace Application.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
+            // Exclude SignalR endpoints from CSRF validation
+            if (context.Request.Path.StartsWithSegments("/messagingHub"))
+            {
+                await _next(context);
+                return;
+            }
+
+            // Exclude Google authentication endpoint from CSRF validation
+            if (context.Request.Path.Equals("/api/auth/google-authenticate", StringComparison.OrdinalIgnoreCase))
+            {
+                await _next(context);
+                return;
+            }
+
+
             if (HttpMethods.IsGet(context.Request.Method) ||
                 HttpMethods.IsHead(context.Request.Method) ||
                 HttpMethods.IsOptions(context.Request.Method))

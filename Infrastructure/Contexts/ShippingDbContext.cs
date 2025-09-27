@@ -7,7 +7,7 @@ using Domain.Models.Ride;
 using Domain.Models.Vehicles;
 using Infrastructure.Contexts.Extensions;
 using Microsoft.EntityFrameworkCore;
-using System;
+
 namespace Infrastructure.Contexts
 {
     public class ShippingDbContext(DbContextOptions<ShippingDbContext> options) 
@@ -35,6 +35,8 @@ namespace Infrastructure.Contexts
         public virtual DbSet<Location> Locations { get; set; } = null!;
         public virtual DbSet<DeliverySlot> DeliverySlots { get; set; } = null!;
         public virtual DbSet<DeliveryOrder> DeliveryOrders { get; set; } = null!;
+        public virtual DbSet<DeliveryRequest> DeliveryRequests { get; set; } = null!;
+        public virtual DbSet<DeliveryOffer> DeliveryOffers { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

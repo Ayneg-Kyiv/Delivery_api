@@ -5,8 +5,10 @@ namespace Domain.Models.Ride
     public class Location: BaseModel
     {
         public string Country { get; set; } = null!;
+        public string? State { get; set; }
         public string City { get; set; } = null!;
         public string Address { get; set; } = null!;
+        public string? HouseNumber { get; set; }
 
         public DateTime DateTime { get; set; }
 
@@ -18,5 +20,8 @@ namespace Domain.Models.Ride
 
         public virtual ICollection<DeliveryOrder> DeliveryOrderStartLocations { get; set; } = [];
         public virtual ICollection<DeliveryOrder> DeliveryOrderEndLocations { get; set; } = [];
+
+        public virtual ICollection<DeliveryRequest> DeliveryRequestsStartLocations { get; set; } = [];
+        public virtual ICollection<DeliveryRequest> DeliveryRequestsEndLocations { get; set; } = [];
     }
 }
