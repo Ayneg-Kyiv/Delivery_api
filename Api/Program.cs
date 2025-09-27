@@ -10,6 +10,7 @@ using Infrastructure.Seeds;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
@@ -27,13 +28,11 @@ builder.Services.Configure<ConnectionStringOptions>(
 builder.Services.Configure<GoogleAuthOptions>(
     builder.Configuration.GetSection("Google"));
 
-// Add services to the container.
-
-
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddOpenApi();
 
 builder.Services.AddCors();
@@ -127,7 +126,12 @@ builder.Services.AddSingleton<IAuthorizationHandler, DynamicRoleHandler>();
 builder.Services.AddSignalR();
 
 
-var app = builder.Build();
+var app = builder.Build(); 
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 app.MapHub<MessagingHub>("/messagingHub");
 
