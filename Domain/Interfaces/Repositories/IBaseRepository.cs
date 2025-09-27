@@ -7,19 +7,19 @@ namespace Domain.Interfaces.Repositories
     public interface IBaseRepository<T, DbT> where T : class
     {
         Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken);
-        Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate,
+        Task<IEnumerable<T>> FindAsync(List<Expression<Func<T, bool>>> predicates,
             CancellationToken cancellationToken);
-        Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate,
+        Task<IEnumerable<T>> FindWithIncludesAsync(List<Expression<Func<T, bool>>> predicates,
             CancellationToken cancellationToken, params Expression<Func<T, object>>[] includes);
         Task<IEnumerable<T>> FindWithIncludesAndPaginationAsync(
-            Expression<Func<T, bool>> predicate,
+            List<Expression<Func<T, bool>>> predicates,
             int pageNumber,
             int pageSize,
             CancellationToken cancellationToken,
             params Expression<Func<T, object>>[] includes);
 
         Task<int>  GetTotalCountAsync(
-            Expression<Func<T, bool>> predicate,
+            List<Expression<Func<T, bool>>> predicates,
             CancellationToken cancellationToken,
             params Expression<Func<T, object>>[] includes);
         
@@ -30,8 +30,8 @@ namespace Domain.Interfaces.Repositories
             IEnumerable<T> entities,
             CancellationToken cancellationToken);
 
-        Task<IEnumerable<object>> FindAllUniqueDataInProperties(
-            Expression<Func<T, bool>> predicate,
+        Task<IEnumerable<object>> FindAllUniqueDataInPropertiesAsync(
+            List<Expression<Func<T, bool>>> predicates,
             Expression<Func<T, object>> propertySelector,
             CancellationToken cancellationToken,
             params Expression<Func<T, object>>[] includes);

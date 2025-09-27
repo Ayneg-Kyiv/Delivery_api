@@ -18,6 +18,7 @@ namespace Application
             services.AddAutoMapper(typeof(DependencyInjection).Assembly, typeof(Infrastructure.DependencyInjection).Assembly);
 
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IArticleService, ArticleService>();
             services.AddScoped<ITokenService, TokenService>();
@@ -28,6 +29,10 @@ namespace Application
             services.AddScoped<IShippingOfferService, ShippingOfferService>();
             services.AddScoped<IShippingObjectService, ShippingObjectService>();
             services.AddScoped<IShippingDestinationService, ShippingDestinationService>();
+            services.AddScoped<ITripService, TripService>();
+            services.AddScoped<IReviewService, ReviewService>();
+            services.AddScoped<IDeliveryRequestService, DeliveryRequestService>();
+            services.AddScoped<IMessageService, MessageService>();
 
             return services;
         }

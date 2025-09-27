@@ -1,4 +1,5 @@
-﻿using Domain;
+﻿using Application.MappingProfiles;
+using Domain;
 using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services;
 using Domain.Options;
@@ -39,7 +40,7 @@ namespace Infrastructure
             // Application services registration
             services.AddScoped<IMailService, MailTrapService>();
 
-            // Automapper services profiles registration
+             //Automapper services profiles registration
             services.AddAutoMapper(cfg =>
             {
                 //add all profiles here
@@ -48,6 +49,10 @@ namespace Infrastructure
                 cfg.AddProfile(new LocationProfile());
                 cfg.AddProfile(new DeliverySlotProfile());
                 cfg.AddProfile(new TripProfile());
+                cfg.AddProfile(new VehicleProfile());
+                cfg.AddProfile(new DeliveryRequestProfile());
+                cfg.AddProfile(new DeliveryOfferProfile());
+                cfg.AddProfile(new MessageProfile());
             });
 
             return services;

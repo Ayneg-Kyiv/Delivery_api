@@ -1,11 +1,10 @@
+using Domain.Models.Abstract;
 using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Models.Vehicles
 {
-    public class Vehicle
+    public class Vehicle : BaseModel
     {
-        [Key] public int Id { get; set; }
-
         [MaxLength(64)] public string? Brand { get; set; }
         [MaxLength(64)] public string? Model { get; set; }
 
@@ -16,6 +15,10 @@ namespace Domain.Models.Vehicles
 
         [MaxLength(20)] public string NumberPlate { get; set; } = string.Empty;
         [MaxLength(64)] public string Color { get; set; } = string.Empty;
+
         [MaxLength(512)] public string? ImagePath { get; set; }
+        [MaxLength(512)]public string? ImagePathBack { get; set; }
+
+        public bool IsApproved { get; set; } = false;
     }
 }

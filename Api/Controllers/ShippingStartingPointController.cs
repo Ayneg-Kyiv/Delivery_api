@@ -28,7 +28,7 @@ namespace Api.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetById([FromRoute]Guid id, CancellationToken cancellationToken)
         {
             var result = await _service.GetByIdAsync(id, cancellationToken);
             if (result == null)
@@ -37,7 +37,7 @@ namespace Api.Controllers
         }
 
         [HttpGet("by-order/{orderId:guid}")]
-        public async Task<IActionResult> GetByOrderId(Guid orderId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetByOrderId([FromRoute]Guid orderId, CancellationToken cancellationToken)
         {
             var result = await _service.GetByOrderIdAsync(orderId, cancellationToken);
             return Ok(TResponse.Successful(result));
@@ -51,7 +51,7 @@ namespace Api.Controllers
         }
 
         [HttpPut("{id:guid}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateShippingStartingPointDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> Update([FromRoute]Guid id, [FromBody] UpdateShippingStartingPointDto dto, CancellationToken cancellationToken)
         {
             var updated = await _service.UpdateAsync(id, dto, cancellationToken);
             if (!updated)
@@ -60,7 +60,7 @@ namespace Api.Controllers
         }
 
         [HttpDelete("{id:guid}")]
-        public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete([FromRoute]Guid id, CancellationToken cancellationToken)
         {
             var deleted = await _service.DeleteAsync(id, cancellationToken);
             if (!deleted)

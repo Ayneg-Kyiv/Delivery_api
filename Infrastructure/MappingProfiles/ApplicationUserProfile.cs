@@ -1,5 +1,6 @@
 using Application.DTOs.Identity;
 using AutoMapper;
+using Domain.Models.DTOs.Identity;
 using Domain.Models.Identity;
 
 namespace Application.Mappings.Profiles
@@ -17,6 +18,11 @@ namespace Application.Mappings.Profiles
             // DTO → Entity (Update)
             CreateMap<UpdateApplicationUserDto, ApplicationUser>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<ApplicationUser, GetMainUserInfoDto>();
+
+            CreateMap<ApplicationUser, GetApplicationUserForTripDto>()
+                .ForMember(u => u.Name, o => o.MapFrom(m => m.FirstName + " " + m.LastName));
         }
     }
 }

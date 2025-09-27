@@ -23,7 +23,7 @@ namespace Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ShippingDestinationDto>> GetById(Guid id)
+        public async Task<ActionResult<ShippingDestinationDto>> GetById([FromRoute]Guid id)
         {
             var destination = await _service.GetByIdAsync(id);
             
@@ -34,14 +34,14 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ShippingDestinationDto>> Create(CreateShippingDestinationDto createDto)
+        public async Task<ActionResult<ShippingDestinationDto>> Create([FromBody]CreateShippingDestinationDto createDto)
         {
             var destination = await _service.AddAsync(createDto);
             return CreatedAtAction(nameof(GetById), new { id = destination.Id }, destination);
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<ShippingDestinationDto>> Update(Guid id, UpdateShippingDestinationDto updateDto)
+        public async Task<ActionResult<ShippingDestinationDto>> Update([FromRoute]Guid id, [FromBody]UpdateShippingDestinationDto updateDto)
         {
             var destination = await _service.UpdateAsync(id, updateDto);
             
@@ -52,7 +52,7 @@ namespace Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(Guid id)
+        public async Task<ActionResult> Delete([FromRoute]Guid id)
         {
             var success = await _service.DeleteAsync(id);
             

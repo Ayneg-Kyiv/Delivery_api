@@ -7,7 +7,7 @@ namespace Infrastructure.Seeds
     {
         public static async Task SeedRolesAsync(RoleManager<IdentityRole<Guid>> roleManager)
         {
-            var roles = new[] { "SuperUser", "Admin", "User" };
+            var roles = new[] { "SuperUser", "Admin", "User", "Driver" };
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))

@@ -40,7 +40,7 @@ namespace Api.Controllers
         /// </summary>
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<ShippingOrderDto>> GetById(
-            [Required] Guid id, 
+            [Required, FromRoute] Guid id, 
             CancellationToken cancellationToken)
         {
             try
@@ -64,7 +64,7 @@ namespace Api.Controllers
         /// </summary>
         [HttpGet("customer/{customerId:guid}")]
         public async Task<ActionResult<IEnumerable<ShippingOrderDto>>> GetByCustomerId(
-            [Required] Guid customerId, 
+            [Required, FromRoute] Guid customerId, 
             CancellationToken cancellationToken)
         {
             try
@@ -151,7 +151,7 @@ namespace Api.Controllers
         /// </summary>
         [HttpPut("{id:guid}")]
         public async Task<ActionResult> Update(
-            [Required] Guid id,
+            [Required, FromRoute] Guid id,
             [FromBody, Required] UpdateShippingOrderDto dto,
             CancellationToken cancellationToken)
         {
@@ -181,7 +181,7 @@ namespace Api.Controllers
         /// </summary>
         [HttpDelete("{id:guid}")]
         public async Task<ActionResult> Delete(
-            [Required] Guid id, 
+            [Required, FromRoute] Guid id, 
             CancellationToken cancellationToken)
         {
             try

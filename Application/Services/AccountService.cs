@@ -1,18 +1,25 @@
-﻿using Domain.Interfaces.Repositories;
+﻿using Application.DTOs.Vehicles;
+using AutoMapper;
+using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services;
 using Domain.Interfaces.Services.Identity;
 using Domain.Models.DTOs;
 using Domain.Models.DTOs.Identity;
 using Domain.Models.Identity;
+using Domain.Models.Vehicles;
 using Domain.Validators;
 using Infrastructure.Contexts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 namespace Application.Services
 {
     public class AccountService(UserManager<ApplicationUser> userManager,
+                                IMapper mapper,
                                 IBaseRepository<ApplicationUser, IdentityDbContext> applicationUserRepository,
+                                IBaseRepository<Vehicle, ShippingDbContext> vehicleRepository,
+                                IBaseRepository<DriverApplication, ShippingDbContext> driverApplicationRepository,
                                 IFileService fileService,
                                 IMailService mailService) : IAccountService
     {
@@ -20,14 +27,15 @@ namespace Application.Services
         {
             try
             {
-                var email = context.User.Claims
-                    .FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
+                var email = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
                 if (string.IsNullOrWhiteSpace(email))
                     return TResponse.Failure(401, "No session on this device");
 
                 var user = await applicationUserRepository.FindAsync
-                    (x => x.Email == email, cancellationToken);
+                    ([x => x.Email == email], cancellationToken);
+
+                var mappedUser = mapper.Map<IEnumerable<GetMainUserInfoDto>>(user);
 
                 return TResponse.Successful(user);
             }
@@ -230,6 +238,212 @@ namespace Application.Services
                 Console.WriteLine($"Error in ResetPasswordAsync: {ex.Message}");
                 return TResponse.Failure(500, $"An error occurred while resetting the password: {ex.Message}");
             }
+        }
+
+        public async Task<TResponse> AddVehicleAsync(CreateVehicleDto createVehicle, HttpContext context, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var id = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrWhiteSpace(id))
+                    return TResponse.Failure(401, "No session on this device");
+
+                if (createVehicle == null)
+                    return TResponse.Failure(400, "Invalid request data");
+
+                var user = await userManager.FindByEmailAsync(id);
+                if (user == null)
+                    return TResponse.Failure(404, "User not found");
+                
+                var vehicle = mapper.Map<Vehicle>(createVehicle);
+                
+                vehicle.OwnerId = user.Id;
+
+                if (createVehicle.ImageFront != null)
+                {
+                    var imagePath = await fileService.SaveFileAsync(createVehicle.ImageFront, cancellationToken);
+                    if (string.IsNullOrEmpty(imagePath))
+                        return TResponse.Failure(500, "Failed to save vehicle image");
+                    vehicle.ImagePath = imagePath;
+                }
+
+                if (createVehicle.ImageBack != null)
+                {
+                    var imagePathBack = await fileService.SaveFileAsync(createVehicle.ImageBack, cancellationToken);
+                    if (string.IsNullOrEmpty(imagePathBack))
+                        return TResponse.Failure(500, "Failed to save vehicle back image");
+                    vehicle.ImagePathBack = imagePathBack;
+                }
+
+                var createdVehicle = await vehicleRepository.AddAsync(vehicle, cancellationToken);
+
+                if(createdVehicle == false)
+                    return TResponse.Failure(500, "Failed to add vehicle");
+
+                var driverApplication = new DriverApplication
+                {
+                    UserId = user.Id,
+                    VehicleId = vehicle.Id
+                };
+
+                var createdDriverApp = await driverApplicationRepository.AddAsync(driverApplication, cancellationToken);
+
+                if (createdDriverApp == false)
+                    return TResponse.Failure(500, "Failed to create driver application");
+
+                return TResponse.Successful("Vehicle added successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding vehicle: {ex.Message}");
+                return TResponse.Failure(500, $"An error occurred while adding the vehicle: {ex.Message}");
+            }
+        }
+
+        public async Task<TResponse> UpdateVehicleAsync(UpdateVehicleDto updateVehicle, HttpContext context, CancellationToken cancellationToken)
+        {
+            if (updateVehicle == null)
+                return TResponse.Failure(400, "");
+
+            var vehicleArr = await vehicleRepository.FindAsync([v => v.Id == updateVehicle.Id], cancellationToken);
+            var vehicle = vehicleArr.FirstOrDefault();
+
+            if (vehicle == null)
+                return TResponse.Failure(404, "Vehicle not found");
+
+            vehicle.Brand = updateVehicle.Brand ?? vehicle.Brand;
+            vehicle.Model = updateVehicle.Model ?? vehicle.Model;
+            vehicle.Type = updateVehicle.Type ?? vehicle.Type;
+
+            vehicle.NumberPlate = updateVehicle.NumberPlate ?? vehicle.NumberPlate;
+            vehicle.Color = updateVehicle.Color ?? vehicle.Color;
+
+            return TResponse.Successful(true, "Vehicle edited successfully");
+        }
+
+        public async Task<TResponse> DeleteVehicleAsync(Guid id, CancellationToken cancellationToken)
+        {
+            if (id == Guid.Empty)
+                return TResponse.Failure(400, "Invalid vehicle ID");
+
+            var vehicleArr = await vehicleRepository.FindAsync([v => v.Id == id], cancellationToken);
+            var vehicle = vehicleArr.FirstOrDefault();
+
+            if (vehicle == null)
+                return TResponse.Failure(404, "Vehicle not found");
+
+            if (!string.IsNullOrWhiteSpace(vehicle.ImagePath))
+            {
+                var fileDeleted = fileService.DeleteFileAsync(vehicle.ImagePath);
+
+                if (!fileDeleted)
+                    return TResponse.Failure(500, "Failed to delete vehicle image");
+            }
+            if (!string.IsNullOrWhiteSpace(vehicle.ImagePathBack))
+            {
+                var fileDeleted = fileService.DeleteFileAsync(vehicle.ImagePathBack);
+             
+                if (!fileDeleted)
+                    return TResponse.Failure(500, "Failed to delete vehicle back image");
+            }
+
+            if(vehicle.IsApproved)
+            {
+                var driverApplicationArr = await driverApplicationRepository.FindAsync([da => da.VehicleId == vehicle.Id], cancellationToken);
+                var driverApplication = driverApplicationArr.FirstOrDefault();
+                if (driverApplication != null)
+                {
+                    var deleteDriverAppResult = await driverApplicationRepository.DeleteAsync(driverApplication, cancellationToken);
+                    if (!deleteDriverAppResult)
+                        return TResponse.Failure(500, "Failed to delete associated driver application");
+                }
+            }
+
+            // Fix CS0136: use a different variable name for the result
+            var deleteResult = await vehicleRepository.DeleteAsync(vehicle, cancellationToken);
+            if (!deleteResult)
+                return TResponse.Failure(500, "Failed to delete vehicle");
+
+            return TResponse.Successful("Vehicle deleted successfully");
+        }
+
+        public async Task<TResponse> GetUserVehiclesAsync(HttpContext context, CancellationToken cancellationToken)
+        {
+            var email = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if(string.IsNullOrEmpty(email))
+                return TResponse.Failure(403, "Access forbidden");
+
+            var user = await userManager.FindByEmailAsync(email ?? "");
+            
+            if (user == null)
+                return TResponse.Failure(400, "Failed to retrieve user");
+            
+            var vehicles = await vehicleRepository.FindAsync([v => v.OwnerId == user.Id], cancellationToken);
+
+            return TResponse.Successful(vehicles, "User vehicles retrieved successfully");
+        }
+
+        public async Task<TResponse> ReturnDriverRequiredData(HttpContext context, CancellationToken cancellationToken)
+        {
+            var email = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if ( string.IsNullOrEmpty(email))
+                return TResponse.Failure(403, "Access forbidden");
+
+            var user = await userManager.FindByEmailAsync(email ?? "");
+
+            if (user == null)
+                return TResponse.Failure(400, "Failed to retrieve user");
+
+            var driverPhone = user.PhoneNumber;
+            var driverImage = user.DriverLicenseImagePath != null;
+            var driverProfileImage = user.ImagePath != null;
+
+            return TResponse.Successful(new { driverPhone, driverImage, driverProfileImage }, "Driver required data retrieved successfully");
+        }
+
+        public async Task<TResponse> SetDriverRequiredData(string? phoneNumber, IFormFile? Image, IFormFile? profileImage, HttpContext context, CancellationToken cancellationToken)
+        {
+            var email = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (email == Guid.Empty.ToString())
+                return TResponse.Failure(403, "Access forbidden");
+
+            var user = await userManager.FindByEmailAsync(email ?? "");
+
+            if (user == null)
+                return TResponse.Failure(400, "Failed to retrieve user");
+
+            if(phoneNumber != null)
+                user.PhoneNumber = phoneNumber;
+            
+            if(Image != null)
+                user.DriverLicenseImagePath = await fileService.SaveFileAsync(Image, cancellationToken);
+
+            if (profileImage != null)
+                user.ImagePath = await fileService.SaveFileAsync(profileImage, cancellationToken);
+
+            var result = await userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+                return TResponse.Failure(500, "Failed to update user data");
+
+            return TResponse.Successful("Driver required data set successfully");
+        }
+
+        public async Task<TResponse> GetShortUserDataAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var userArr = await applicationUserRepository.FindAsync([u => u.Id == id], cancellationToken);
+
+            if(userArr == null || !userArr.Any())
+                return TResponse.Failure(404, "User not found");
+
+            var user = userArr.First();
+
+            var shortData = mapper.Map<GetApplicationUserForTripDto>(user);
+
+            return TResponse.Successful(shortData, "Short user data retrieved successfully");
         }
     }
 }

@@ -3,9 +3,9 @@ using Domain.Models.DTOs.Ride.DeliveryOrder;
 using Domain.Models.DTOs.Ride.DeliverySlot;
 using Domain.Models.DTOs.Ride.Location;
 using Domain.Models.DTOs.Ride.Trip;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace Api.Controllers
 {
@@ -25,10 +25,64 @@ namespace Api.Controllers
             [FromQuery] string? cargoType,
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,
+            [FromQuery] bool isCompleted = false,
             CancellationToken cancellationToken = default)
         {
             var result = await tripService.GetTripsBatchAsync(
-                cityFrom, cityTo, priceFrom, priceTo, dateFrom, dateTo, driverRatingFrom, cargoType, pageNumber, pageSize, cancellationToken);
+                isCompleted,
+                cityFrom, cityTo,
+                priceFrom, priceTo,
+                dateFrom, dateTo,
+                driverRatingFrom,
+                cargoType,
+                pageNumber,
+                pageSize,
+                cancellationToken);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+        [HttpGet("list/with-orders")]
+        public async Task<IActionResult> GetTripsWithOrders(
+            [FromQuery] Guid? id,
+            [FromQuery] string? cityFrom,
+            [FromQuery] string? cityTo,
+            [FromQuery] decimal? priceFrom,
+            [FromQuery] decimal? priceTo,
+            [FromQuery] DateTime? dateFrom,
+            [FromQuery] DateTime? dateTo,
+            [FromQuery] double? driverRatingFrom,
+            [FromQuery] string? cargoType,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] bool isCompleted = false,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await tripService.GetTripsBatchByDriverIdWithOrdersAsync(
+                id,
+                isCompleted,
+                cityFrom, cityTo,
+                priceFrom, priceTo,
+                dateFrom, dateTo,
+                driverRatingFrom,
+                cargoType,
+                pageNumber,
+                pageSize,
+                HttpContext,
+                cancellationToken);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpGet("locations/unique")]
+        public async Task<IActionResult> GetAllUniqueLocations(CancellationToken cancellationToken)
+        {
+            var result = await tripService.GetAllUniqueLocations(cancellationToken);
 
             if (!result.Success)
                 return BadRequest(result);
@@ -47,12 +101,24 @@ namespace Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet("with-orders/{id}")]
+        public async Task<IActionResult> GetTripByIdWithOrders([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var result = await tripService.GetTripByIdWithOrdersAsync(id, cancellationToken);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles ="Driver")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateTrip([FromBody] CreateTripDto tripDto, CancellationToken cancellationToken)
         {
-            var id = HttpContext.User?.FindFirst(JwtRegisteredClaimNames.NameId)?.Value;
+            var id = HttpContext.User?.Claims.LastOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-            if (id == null )
+            if (id == null)
                 return Unauthorized("Invalid or missing user ID");
 
             tripDto.DriverId = Guid.Parse(id);
@@ -65,6 +131,7 @@ namespace Api.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Driver")]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteTrip([FromRoute] Guid id, CancellationToken cancellationToken)
         {
@@ -76,6 +143,7 @@ namespace Api.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "User")]
         [HttpPut("location/update")]
         public async Task<IActionResult> UpdateLocation([FromBody] UpdateLocationDto locationDto, CancellationToken cancellationToken)
         {
@@ -87,6 +155,7 @@ namespace Api.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Driver")]
         [HttpPost("{tripId}/slot/add")]
         public async Task<IActionResult> AddDeliverySlot([FromRoute] Guid tripId, [FromBody] CreateDeliverySlotDto slot, CancellationToken cancellationToken)
         {
@@ -109,10 +178,11 @@ namespace Api.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "User")]
         [HttpPost("order/create")]
         public async Task<IActionResult> CreateDeliveryOrder([FromBody] CreateDeliveryOrderDto deliveryOrderDto, CancellationToken cancellationToken)
         {
-            var id = HttpContext.User?.FindFirst(JwtRegisteredClaimNames.NameId)?.Value;
+            var id = HttpContext.User?.Claims.LastOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
             if (id == null)
                 return Unauthorized("Invalid or missing user ID");
@@ -127,6 +197,7 @@ namespace Api.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "User")]
         [HttpDelete("order/delete/{id}")]
         public async Task<IActionResult> DeleteDeliveryOrder([FromRoute] Guid id, CancellationToken cancellationToken)
         {
@@ -138,6 +209,7 @@ namespace Api.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "User")]
         [HttpPut("complete/{id}")]
         public async Task<IActionResult> SetTripAsCompleted([FromRoute] Guid id, CancellationToken cancellationToken)
         {
@@ -149,6 +221,7 @@ namespace Api.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "User")]
         [HttpPut("order/pickup/{id}")]
         public async Task<IActionResult> SetAsPickedUp([FromRoute] Guid id, CancellationToken cancellationToken)
         {
@@ -160,6 +233,7 @@ namespace Api.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "User")]
         [HttpPut("order/deliver/{id}")]
         public async Task<IActionResult> SetAsDelivered([FromRoute] Guid id, CancellationToken cancellationToken)
         {
@@ -168,6 +242,89 @@ namespace Api.Controllers
             if (!result.Success)
                 return BadRequest(result);
 
+            return Ok(result);
+        }
+
+
+        [HttpGet("details/{id}")]
+        public async Task<IActionResult> GetTripDetailsById([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var result = await tripService.GetTripDetailsByIdAsync(id, cancellationToken);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Driver")]
+        [HttpPut("start/{tripId}")]
+        public async Task<IActionResult> SetTripAsStarted([FromRoute] Guid tripId, CancellationToken cancellationToken)
+        {
+            var result = await tripService.SetTripAsStartedAsync(tripId, cancellationToken);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Driver")]
+        [HttpPut("order/accept/{id}")]
+        public async Task<IActionResult> SetAsAccepted([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var result = await tripService.SetAsAcceptedAsync(id, cancellationToken);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Driver")]
+        [HttpPut("order/declined/{id}")]
+        public async Task<IActionResult> SetAsDeclined([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var result = await tripService.SetAsDeclinedAsync(id, cancellationToken);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "User")]
+        [HttpGet("orders/by-sender")]
+        public async Task<IActionResult> GetDeliveryOrdersBatchBySenderId(
+            [FromQuery] Guid? tripId,
+            [FromQuery] Guid? userId,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await tripService.GetDeliveryOrdersBatchBySenderIdAsync(
+                tripId,
+                userId,
+                pageNumber,
+                pageSize,
+                HttpContext,
+                cancellationToken);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "User")]
+        [HttpGet("order/{id}")]
+        public async Task<IActionResult> GetDeliveryOrderById([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var result = await tripService.GetDeliveryOrderByIdAsync(id, cancellationToken);
+            
+            if (!result.Success)
+                return BadRequest(result);
+            
             return Ok(result);
         }
     }

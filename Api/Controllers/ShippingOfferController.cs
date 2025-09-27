@@ -39,7 +39,7 @@ namespace Api.Controllers
         /// Отримати пропозицію доставки за ID
         /// </summary>
         [HttpGet("{id:guid}")]
-        public async Task<ActionResult<ShippingOfferDto>> GetById(Guid id, CancellationToken cancellationToken)
+        public async Task<ActionResult<ShippingOfferDto>> GetById([FromRoute] Guid id, CancellationToken cancellationToken)
         {
             try
             {
@@ -60,7 +60,7 @@ namespace Api.Controllers
         /// Отримати пропозиції доставки за ID замовлення
         /// </summary>
         [HttpGet("by-order/{shippingOrderId:guid}")]
-        public async Task<ActionResult<IEnumerable<ShippingOfferDto>>> GetByShippingOrderId(Guid shippingOrderId, CancellationToken cancellationToken)
+        public async Task<ActionResult<IEnumerable<ShippingOfferDto>>> GetByShippingOrderId([FromRoute]Guid shippingOrderId, CancellationToken cancellationToken)
         {
             try
             {
@@ -77,7 +77,7 @@ namespace Api.Controllers
         /// Отримати пропозиції доставки за ID кур'єра
         /// </summary>
         [HttpGet("by-courier/{courierId:guid}")]
-        public async Task<ActionResult<IEnumerable<ShippingOfferDto>>> GetByCourierId(Guid courierId, CancellationToken cancellationToken)
+        public async Task<ActionResult<IEnumerable<ShippingOfferDto>>> GetByCourierId([FromRoute]Guid courierId, CancellationToken cancellationToken)
         {
             try
             {
@@ -116,7 +116,7 @@ namespace Api.Controllers
         /// Оновити пропозицію доставки
         /// </summary>
         [HttpPut("{id:guid}")]
-        public async Task<ActionResult> Update(Guid id, [FromBody] UpdateShippingOfferDto updateDto, CancellationToken cancellationToken)
+        public async Task<ActionResult> Update([FromRoute]Guid id, [FromBody] UpdateShippingOfferDto updateDto, CancellationToken cancellationToken)
         {
             try
             {
@@ -143,7 +143,7 @@ namespace Api.Controllers
         /// Видалити пропозицію доставки
         /// </summary>
         [HttpDelete("{id:guid}")]
-        public async Task<ActionResult> Delete(Guid id, CancellationToken cancellationToken)
+        public async Task<ActionResult> Delete([FromRoute]Guid id, CancellationToken cancellationToken)
         {
             try
             {
@@ -190,7 +190,7 @@ namespace Api.Controllers
         /// Прийняти пропозицію доставки
         /// </summary>
         [HttpPatch("{id:guid}/accept")]
-        public async Task<ActionResult> AcceptOffer(Guid id, CancellationToken cancellationToken)
+        public async Task<ActionResult> AcceptOffer([FromRoute]Guid id, CancellationToken cancellationToken)
         {
             try
             {
@@ -212,7 +212,7 @@ namespace Api.Controllers
         /// Відхилити пропозицію доставки
         /// </summary>
         [HttpPatch("{id:guid}/reject")]
-        public async Task<ActionResult> RejectOffer(Guid id, CancellationToken cancellationToken)
+        public async Task<ActionResult> RejectOffer([FromRoute]Guid id, CancellationToken cancellationToken)
         {
             try
             {

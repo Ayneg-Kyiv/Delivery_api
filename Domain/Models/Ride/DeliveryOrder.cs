@@ -38,6 +38,8 @@ namespace Domain.Models.Ride
 
         public string? Comment { get; set; }
 
+        public bool IsAccepted { get; set; } = false;
+        public bool IsDeclined { get; set; } = false;
         public bool IsPickedUp { get; set; } = false;
         public bool IsDelivered { get; set; } = false;
     }

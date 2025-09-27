@@ -10,6 +10,10 @@
         public string Author { get; set; } = null!;
         public string? ImagePath { get; set; }
 
+        public string? Category { get; set; }
+
         public DateTime CreatedAt { get; set; }
+
+        public List<GetArticleBlockDto>? ArticleBlocks { get; set; }
     }
 }

@@ -26,14 +26,14 @@ namespace Application.Services
 
         public async Task<ShippingOrderDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.Id == id], cancellationToken);
             var entity = entities.FirstOrDefault();
             return entity == null ? null : _mapper.Map<ShippingOrderDto>(entity);
         }
 
         public async Task<IEnumerable<ShippingOrderDto>> GetByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.CustomerId == customerId, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.CustomerId == customerId], cancellationToken);
             return _mapper.Map<IEnumerable<ShippingOrderDto>>(entities);
         }
 
@@ -57,7 +57,7 @@ namespace Application.Services
 
         public async Task<bool> UpdateAsync(Guid id, UpdateShippingOrderDto dto, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.Id == id], cancellationToken);
             var entity = entities.FirstOrDefault();
             if (entity == null) return false;
 
@@ -73,7 +73,7 @@ namespace Application.Services
 
         public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
         {
-            var entities = await _repository.FindAsync(x => x.Id == id, cancellationToken);
+            var entities = await _repository.FindAsync([x => x.Id == id], cancellationToken);
             var entity = entities.FirstOrDefault();
             if (entity == null) return false;
             return await _repository.DeleteAsync(entity, cancellationToken);
@@ -85,12 +85,12 @@ namespace Application.Services
         {
             var entities = customerId.HasValue
                 ? await _repository.FindWithIncludesAsync(
-                    x => x.CustomerId == customerId.Value,
+                    [x => x.CustomerId == customerId.Value],
                     cancellationToken,
                     x => x.Offers!,
                     x => x.Objects!)
                 : await _repository.FindWithIncludesAsync(
-                    x => true,
+                    [x => true],
                     cancellationToken,
                     x => x.Offers!,
                     x => x.Objects!);
@@ -106,14 +106,14 @@ namespace Application.Services
         {
             var entities = customerId.HasValue
                 ? await _repository.FindWithIncludesAndPaginationAsync(
-                    x => x.CustomerId == customerId.Value,
+                    [x => x.CustomerId == customerId.Value],
                     pageNumber,
                     pageSize,
                     cancellationToken,
                     x => x.Offers!,
                     x => x.Objects!)
                 : await _repository.FindWithIncludesAndPaginationAsync(
-                    x => true,
+                    [x => true],
                     pageNumber,
                     pageSize,
                     cancellationToken,

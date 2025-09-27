@@ -1,6 +1,5 @@
 ﻿using Domain.Interfaces.Repositories;
 using Domain.Models.Abstract;
-using Infrastructure.Contexts;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -60,11 +59,16 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken)
+        public async Task<IEnumerable<T>> FindAsync(List<Expression<Func<T, bool>>> predicates, CancellationToken cancellationToken)
         {
             try
             {
-                return await _dbSet.Where(predicate).ToListAsync(cancellationToken);
+                IQueryable<T> query = _dbSet;
+
+                foreach (var predicate in predicates)
+                    query = query.Where(predicate);
+
+                return await query.ToListAsync(cancellationToken);
             }
             catch (Exception ex)
             {
@@ -74,19 +78,20 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<IEnumerable<T>> FindWithIncludesAndPaginationAsync(Expression<Func<T, bool>> predicate,
+        public async Task<IEnumerable<T>> FindWithIncludesAndPaginationAsync(List<Expression<Func<T, bool>>> predicates,
                                                                              int pageNumber, int pageSize,
                                                                              CancellationToken cancellationToken,
                                                                              params Expression<Func<T, object>>[] includes)
         {
             try
             {
-                IQueryable<T> query = _dbSet.Where(predicate);
-                
+                IQueryable<T> query = _dbSet;
+
                 foreach (var include in includes)
-                {
                     query = query.Include(include);
-                }
+
+                foreach (var predicate in predicates)
+                    query = query.Where(predicate);
                 
                 if (typeof(BaseModel).IsAssignableFrom(typeof(T)))
                 {
@@ -111,18 +116,19 @@ namespace Infrastructure.Repositories
         }
 
 
-        public async Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate,
+        public async Task<IEnumerable<T>> FindWithIncludesAsync(List<Expression<Func<T, bool>>> predicates,
                                                                 CancellationToken cancellationToken,
                                                                 params Expression<Func<T, object>>[] includes)
         {
             try
             {
-                IQueryable<T> query = _dbSet.Where(predicate);
+                IQueryable<T> query = _dbSet;
 
                 foreach (var include in includes)
-                {
                     query = query.Include(include);
-                }
+
+                foreach (var predicate in predicates)
+                    query = query.Where(predicate);
 
                 return await query.ToListAsync(cancellationToken);
             }
@@ -134,18 +140,21 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<IEnumerable<object>> FindAllUniqueDataInProperties(Expression<Func<T, bool>> predicate,
+        public async Task<IEnumerable<object>> FindAllUniqueDataInPropertiesAsync(List<Expression<Func<T, bool>>> predicates,
                                                                              Expression<Func<T, object>> propertySelector,
                                                                              CancellationToken cancellationToken,
                                                                              params Expression<Func<T, object>>[] includes)
         {
             try
             {
-                IQueryable<T> query = _dbSet.Where(predicate);
+                IQueryable<T> query = _dbSet;
+
                 foreach (var include in includes)
-                {
                     query = query.Include(include);
-                }
+
+                foreach (var predicate in predicates)
+                    query = query.Where(predicate);
+
                 return await query.Select(propertySelector).Distinct().ToListAsync(cancellationToken);
             }
             catch (Exception ex)
@@ -170,16 +179,19 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<int> GetTotalCountAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken, params Expression<Func<T, object>>[] includes)
+        public async Task<int> GetTotalCountAsync(List<Expression<Func<T, bool>>> predicates,
+                                                  CancellationToken cancellationToken, 
+                                                  params Expression<Func<T, object>>[] includes)
         {
             try
             {
-                IQueryable<T> query = _dbSet.Where(predicate);
+                IQueryable<T> query = _dbSet;
 
                 foreach (var include in includes)
-                {
                     query = query.Include(include);
-                }
+
+                foreach (var predicate in predicates)
+                    query = query.Where(predicate);
 
                 int totalCount = await query.CountAsync(cancellationToken);
 

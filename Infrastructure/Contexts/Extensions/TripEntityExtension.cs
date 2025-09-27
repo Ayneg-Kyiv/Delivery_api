@@ -43,6 +43,24 @@ namespace Infrastructure.Contexts.Extensions
                 .HasForeignKey(o => o.EndLocationId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            builder.Entity<DeliveryRequest>()
+                .HasOne(r => r.StartLocation)
+                .WithMany(l => l.DeliveryRequestsStartLocations)
+                .HasForeignKey(r => r.StartLocationId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<DeliveryRequest>()
+                .HasOne(r => r.EndLocation)
+                .WithMany(l => l.DeliveryRequestsEndLocations)
+                .HasForeignKey(r => r.EndLocationId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<DeliveryRequest>()
+                .HasMany(r => r.Offers)
+                .WithOne(o => o.DeliveryRequest)
+                .HasForeignKey(o => o.DeliveryRequestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             return builder;
         }
     }

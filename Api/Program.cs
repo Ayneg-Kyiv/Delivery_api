@@ -1,4 +1,5 @@
 using Api.Handlers;
+using Api.Hubs;
 using Api.Providers;
 using Application;
 using Application.Middleware;
@@ -6,31 +7,48 @@ using Domain.Models.Identity;
 using Domain.Options;
 using Infrastructure.Contexts;
 using Infrastructure.Seeds;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddApplication(builder.Configuration);
 
 builder.Services.Configure<ConnectionStringOptions>(
     builder.Configuration.GetSection("ConnectionStringOptions"));
 
-// Add services to the container.
+builder.Services.Configure<GoogleAuthOptions>(
+    builder.Configuration.GetSection("Google"));
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddOpenApi();
 
 builder.Services.AddCors();
 
-builder.Services.AddApplication(builder.Configuration);
+builder.Services.AddSwaggerGen(c =>
+{
+    // Other Swagger configurations
+    c.OperationFilter<FileUploadOperationFilter>();
 
-
-builder.Services.AddSwaggerGen();
+    // Configure correct schema generation for IFormFile
+    c.MapType<IFormFile>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Format = "binary"
+    });
+});
 
 builder.Services.AddAntiforgery(options =>
 {
@@ -93,19 +111,36 @@ builder.Services.AddAuthentication(options =>
             ClockSkew = TimeSpan.FromMinutes(1),
             RequireExpirationTime = true
         };
+    })
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Google:ClientSecret"];
+        options.CallbackPath = "/api/auth/google-callback";
+        options.SaveTokens = true;
     });
 
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, DynamicPolicyProvider>();
 builder.Services.AddSingleton<IAuthorizationHandler, DynamicRoleHandler>();
 
+builder.Services.AddSignalR();
 
-var app = builder.Build();
+
+var app = builder.Build(); 
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+app.MapHub<MessagingHub>("/messagingHub");
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
 
     app.UseStaticFiles(new StaticFileOptions()
     {
@@ -116,7 +151,19 @@ if (app.Environment.IsDevelopment())
 
     app.UseCors(options =>
     {
-        options.WithOrigins("https://localhost:3000", "http://localhost:3000")
+        options.WithOrigins("https://localhost:3000",
+              "http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+}
+else
+{
+    app.UseCors(options =>
+    {
+        options.WithOrigins("https://delivery-web-client.vercel.app",
+              "http://delivery-web-client.vercel.app")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -152,5 +199,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapOpenApi();
 
 app.Run();

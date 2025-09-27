@@ -17,7 +17,7 @@ namespace Infrastructure.Migrations.ShippingDb
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -41,11 +41,19 @@ namespace Infrastructure.Migrations.ShippingDb
 
             modelBuilder.Entity("Domain.Models.Messaging.Message", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
+
+                    b.Property<Guid?>("DeliveryOfferId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("DeliveryOrderId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("ReceiverId")
                         .HasColumnType("uniqueidentifier");
@@ -59,17 +67,20 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("ShippingOrderId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ShippingOrderId");
+                    b.HasIndex("DeliveryOfferId");
+
+                    b.HasIndex("DeliveryOrderId");
 
                     b.ToTable("Messages");
                 });
@@ -82,6 +93,9 @@ namespace Infrastructure.Migrations.ShippingDb
 
                     b.Property<string>("Author")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Category")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Content")
@@ -106,6 +120,39 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.HasKey("Id");
 
                     b.ToTable("Articles");
+                });
+
+            modelBuilder.Entity("Domain.Models.News.ArticleBlock", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
+
+                    b.Property<string>("ImagePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticleId");
+
+                    b.ToTable("ArticleBlocks");
                 });
 
             modelBuilder.Entity("Domain.Models.Orders.ShippingDestination", b =>
@@ -340,16 +387,27 @@ namespace Infrastructure.Migrations.ShippingDb
 
             modelBuilder.Entity("Domain.Models.Reviews.Review", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
+
+                    b.Property<Guid?>("DeliveryOrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("DeliveryRequestId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Rating")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("ShippingOrderId")
+                    b.Property<Guid>("ReviewerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ShippingOrderId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Text")
@@ -357,14 +415,64 @@ namespace Infrastructure.Migrations.ShippingDb
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DeliveryOrderId");
+
+                    b.HasIndex("DeliveryRequestId");
+
                     b.HasIndex("ShippingOrderId");
 
                     b.ToTable("Reviews");
+                });
+
+            modelBuilder.Entity("Domain.Models.Ride.DeliveryOffer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
+
+                    b.Property<Guid>("DeliveryRequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DriverId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("EstimatedCollectionTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EstimatedDeliveryTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsAccepted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeclined")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeliveryRequestId");
+
+                    b.ToTable("DeliveryOffers");
                 });
 
             modelBuilder.Entity("Domain.Models.Ride.DeliveryOrder", b =>
@@ -385,6 +493,12 @@ namespace Infrastructure.Migrations.ShippingDb
 
                     b.Property<Guid>("EndLocationId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsAccepted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeclined")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDelivered")
                         .HasColumnType("bit");
@@ -436,6 +550,89 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.HasIndex("TripId");
 
                     b.ToTable("DeliveryOrders");
+                });
+
+            modelBuilder.Entity("Domain.Models.Ride.DeliveryRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CargoSlotType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
+
+                    b.Property<Guid?>("DeliveryOfferID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EndLocationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("EstimatedPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsAccepted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDelivered")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPickedUp")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ObjectDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ObjectName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("ObjectWeight")
+                        .HasColumnType("float");
+
+                    b.Property<string>("ReceiverName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReceiverPhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SenderEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SenderPhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("StartLocationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EndLocationId");
+
+                    b.HasIndex("StartLocationId");
+
+                    b.ToTable("DeliveryRequests");
                 });
 
             modelBuilder.Entity("Domain.Models.Ride.DeliverySlot", b =>
@@ -505,11 +702,17 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("HouseNumber")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<double?>("Latitude")
                         .HasColumnType("float");
 
                     b.Property<double?>("Longitude")
                         .HasColumnType("float");
+
+                    b.Property<string>("State")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2")
@@ -533,11 +736,26 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.Property<Guid>("DriverId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("EndLocationId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsStarted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("StartLocationId")
                         .HasColumnType("uniqueidentifier");
@@ -546,22 +764,52 @@ namespace Infrastructure.Migrations.ShippingDb
                         .HasColumnType("datetime2")
                         .HasAnnotation("Relational:JsonPropertyName", "updatedat");
 
+                    b.Property<Guid>("VehicleId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EndLocationId");
 
                     b.HasIndex("StartLocationId");
 
+                    b.HasIndex("VehicleId");
+
                     b.ToTable("Trips");
+                });
+
+            modelBuilder.Entity("Domain.Models.Vehicles.DriverApplication", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("VehicleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VehicleId");
+
+                    b.ToTable("DriverApplications");
                 });
 
             modelBuilder.Entity("Domain.Models.Vehicles.Vehicle", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Brand")
                         .HasMaxLength(64)
@@ -572,9 +820,20 @@ namespace Infrastructure.Migrations.ShippingDb
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "createdat");
+
                     b.Property<string>("ImagePath")
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("ImagePathBack")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Model")
                         .HasMaxLength(64)
@@ -592,6 +851,10 @@ namespace Infrastructure.Migrations.ShippingDb
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "updatedat");
+
                     b.HasKey("Id");
 
                     b.ToTable("Vehicles");
@@ -599,13 +862,28 @@ namespace Infrastructure.Migrations.ShippingDb
 
             modelBuilder.Entity("Domain.Models.Messaging.Message", b =>
                 {
-                    b.HasOne("Domain.Models.Orders.ShippingOrder", "ShippingOrder")
+                    b.HasOne("Domain.Models.Ride.DeliveryOffer", "DeliveryOffer")
                         .WithMany()
-                        .HasForeignKey("ShippingOrderId")
+                        .HasForeignKey("DeliveryOfferId");
+
+                    b.HasOne("Domain.Models.Ride.DeliveryOrder", "DeliveryOrder")
+                        .WithMany()
+                        .HasForeignKey("DeliveryOrderId");
+
+                    b.Navigation("DeliveryOffer");
+
+                    b.Navigation("DeliveryOrder");
+                });
+
+            modelBuilder.Entity("Domain.Models.News.ArticleBlock", b =>
+                {
+                    b.HasOne("Domain.Models.News.Article", "Article")
+                        .WithMany("ArticleBlocks")
+                        .HasForeignKey("ArticleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ShippingOrder");
+                    b.Navigation("Article");
                 });
 
             modelBuilder.Entity("Domain.Models.Orders.ShippingDestination", b =>
@@ -650,13 +928,34 @@ namespace Infrastructure.Migrations.ShippingDb
 
             modelBuilder.Entity("Domain.Models.Reviews.Review", b =>
                 {
+                    b.HasOne("Domain.Models.Ride.DeliveryOrder", "DeliveryOrder")
+                        .WithMany()
+                        .HasForeignKey("DeliveryOrderId");
+
+                    b.HasOne("Domain.Models.Ride.DeliveryRequest", "DeliveryRequest")
+                        .WithMany()
+                        .HasForeignKey("DeliveryRequestId");
+
                     b.HasOne("Domain.Models.Orders.ShippingOrder", "ShippingOrder")
                         .WithMany()
-                        .HasForeignKey("ShippingOrderId")
+                        .HasForeignKey("ShippingOrderId");
+
+                    b.Navigation("DeliveryOrder");
+
+                    b.Navigation("DeliveryRequest");
+
+                    b.Navigation("ShippingOrder");
+                });
+
+            modelBuilder.Entity("Domain.Models.Ride.DeliveryOffer", b =>
+                {
+                    b.HasOne("Domain.Models.Ride.DeliveryRequest", "DeliveryRequest")
+                        .WithMany("Offers")
+                        .HasForeignKey("DeliveryRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ShippingOrder");
+                    b.Navigation("DeliveryRequest");
                 });
 
             modelBuilder.Entity("Domain.Models.Ride.DeliveryOrder", b =>
@@ -694,6 +993,25 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.Navigation("Trip");
                 });
 
+            modelBuilder.Entity("Domain.Models.Ride.DeliveryRequest", b =>
+                {
+                    b.HasOne("Domain.Models.Ride.Location", "EndLocation")
+                        .WithMany("DeliveryRequestsEndLocations")
+                        .HasForeignKey("EndLocationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Models.Ride.Location", "StartLocation")
+                        .WithMany("DeliveryRequestsStartLocations")
+                        .HasForeignKey("StartLocationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("EndLocation");
+
+                    b.Navigation("StartLocation");
+                });
+
             modelBuilder.Entity("Domain.Models.Ride.DeliverySlot", b =>
                 {
                     b.HasOne("Domain.Models.Ride.Trip", "Trip")
@@ -719,9 +1037,33 @@ namespace Infrastructure.Migrations.ShippingDb
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Domain.Models.Vehicles.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("EndLocation");
 
                     b.Navigation("StartLocation");
+
+                    b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("Domain.Models.Vehicles.DriverApplication", b =>
+                {
+                    b.HasOne("Domain.Models.Vehicles.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("Domain.Models.News.Article", b =>
+                {
+                    b.Navigation("ArticleBlocks");
                 });
 
             modelBuilder.Entity("Domain.Models.Orders.ShippingOrder", b =>
@@ -731,6 +1073,11 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.Navigation("Offers");
 
                     b.Navigation("ShippingDestinations");
+                });
+
+            modelBuilder.Entity("Domain.Models.Ride.DeliveryRequest", b =>
+                {
+                    b.Navigation("Offers");
                 });
 
             modelBuilder.Entity("Domain.Models.Ride.DeliverySlot", b =>
@@ -743,6 +1090,10 @@ namespace Infrastructure.Migrations.ShippingDb
                     b.Navigation("DeliveryOrderEndLocations");
 
                     b.Navigation("DeliveryOrderStartLocations");
+
+                    b.Navigation("DeliveryRequestsEndLocations");
+
+                    b.Navigation("DeliveryRequestsStartLocations");
 
                     b.Navigation("TripsEnd");
 
