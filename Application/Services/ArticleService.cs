@@ -17,7 +17,6 @@ namespace Application.Services
     {
         private List<Expression<Func<Article, bool>>> Predicates = [];
 
-
         public async Task<TResponse> AddArticleBlockAsync(CreateArticleBlockDto articleBlock, CancellationToken cancellationToken)
         {
             if (articleBlock == null) return TResponse.Failure(405, "Article block data is null");
@@ -139,7 +138,7 @@ namespace Application.Services
 
             var totalArticles = await repository.GetTotalCountAsync(Predicates, cancellationToken);
 
-            if (totalArticles == 0) return TResponse.Failure(404, "No articles found");
+            if (totalArticles == 0) return TResponse.Successful(new List<GetArticleDto>());
 
             var articles = await repository.FindWithIncludesAndPaginationAsync(
                 Predicates,
