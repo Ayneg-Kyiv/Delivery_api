@@ -17,11 +17,11 @@ namespace Infrastructure.Contexts
         public virtual DbSet<Vehicle> Vehicles { get; set; } = null!;
         public virtual DbSet<DriverApplication> DriverApplications { get; set; } = null!;
 
-        public virtual DbSet<ShippingOrder> ShippingOrders { get; set; } = null!;
-        public virtual DbSet<ShippingOffer> ShippingOffers { get; set; } = null!;
-        public virtual DbSet<ShippingObject> ShippingObjects { get; set; } = null!;
-        public virtual DbSet<ShippingStartingPoint> ShippingStartingPoints { get; set; } = null!;
-        public virtual DbSet<ShippingDestination> ShippingDestinations { get; set; } = null!;
+        //public virtual DbSet<ShippingOrder> ShippingOrders { get; set; } = null!;
+        //public virtual DbSet<ShippingOffer> ShippingOffers { get; set; } = null!;
+        //public virtual DbSet<ShippingObject> ShippingObjects { get; set; } = null!;
+        //public virtual DbSet<ShippingStartingPoint> ShippingStartingPoints { get; set; } = null!;
+        //public virtual DbSet<ShippingDestination> ShippingDestinations { get; set; } = null!;
         public virtual DbSet<Message> Messages { get; set; } = null!;
         public virtual DbSet<Review> Reviews { get; set; } = null!;
         public virtual DbSet<Feedback> Feedbacks { get; set; } = null!;
