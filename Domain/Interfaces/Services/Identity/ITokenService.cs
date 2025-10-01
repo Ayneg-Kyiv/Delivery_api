@@ -7,8 +7,8 @@ namespace Domain.Interfaces.Services.Identity
     {
         Task<string> GetTokenAsync(ApplicationUser user, IEnumerable<string> roles);
 
-        Task GetRefreshTokenAsync(ApplicationUser user, IEnumerable<string> roles, HttpContext context, bool rememberMe);
+        Task GetRefreshTokenAsync(ApplicationUser user, IEnumerable<string> roles, HttpContext context, bool rememberMe, string? oldToken);
 
-        Task<string> RefreshSessionAsync(ApplicationUser user, IEnumerable<string> roles, HttpContext context);
+        Task<string> RefreshSessionAsync(ApplicationUser user, IEnumerable<string> roles, string oldToken, HttpContext context);
     }
 }

@@ -12,7 +12,7 @@ namespace Application.Services
     public class TokenService(ISessionDataService sessionDataService,
                               IConfiguration configuration) : ITokenService
     {
-        public async Task GetRefreshTokenAsync(ApplicationUser user, IEnumerable<string> roles, HttpContext context, bool rememberMe)
+        public async Task GetRefreshTokenAsync(ApplicationUser user, IEnumerable<string> roles, HttpContext context, bool rememberMe, string oldToken)
         {
             try
             {
@@ -48,12 +48,10 @@ namespace Application.Services
                         : DateTime.UtcNow.AddMinutes(double.Parse(configuration["Jwt:RefreshTokenExpiryMinutes"] ?? "60")))
                 };
 
-                var oldRefreshToken = context.Request.Cookies["refreshToken"];
 
-
-                if (!string.IsNullOrEmpty(oldRefreshToken) && await sessionDataService.IsSessionExistsAsync(context))
+                if (!string.IsNullOrEmpty(oldToken) && await sessionDataService.IsSessionExistsAsync(context))
                 {
-                    await sessionDataService.UpdateSessionRefreshTokenAsync(oldRefreshToken, handledRefreshToken);
+                    await sessionDataService.UpdateSessionRefreshTokenAsync(oldToken, handledRefreshToken);
                     context.Response.Cookies.Delete("refreshToken");
                 }
                 else
@@ -105,17 +103,17 @@ namespace Application.Services
             }
         }
 
-        public async Task<string> RefreshSessionAsync(ApplicationUser user, IEnumerable<string> roles, HttpContext context)
+        public async Task<string> RefreshSessionAsync(ApplicationUser user, IEnumerable<string> roles, string? oldToken, HttpContext context)
         {
             try
             {
-                if (!context.Request.Cookies.TryGetValue("refreshToken", out _))
+                if (string.IsNullOrEmpty(oldToken))
                     return string.Empty;
                 else
                 {
                     bool rememberMe = context.Request.Cookies.ContainsKey("rememberMe") &&
                         bool.TryParse(context.Request.Cookies["rememberMe"], out var result) && result;
-                    await GetRefreshTokenAsync(user, roles, context, rememberMe);
+                    await GetRefreshTokenAsync(user, roles, context, rememberMe, oldToken);
                     return await GetTokenAsync(user, roles);
                 }
             }

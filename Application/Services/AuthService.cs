@@ -77,7 +77,7 @@ namespace Application.Services
                 // Generate JWT token for the user
                 var roles = await userManager.GetRolesAsync(user);
 
-                await tokenService.GetRefreshTokenAsync(user, roles, context, true);
+                await tokenService.GetRefreshTokenAsync(user, roles, context, true, null);
                 
                 var token = await tokenService.GetTokenAsync(user, roles);
 
@@ -119,7 +119,7 @@ namespace Application.Services
                 var roles = await userManager.GetRolesAsync(user
                     ?? throw new Exception("User not found"));
 
-                var newToken = await tokenService.RefreshSessionAsync(user, roles, context);
+                var newToken = await tokenService.RefreshSessionAsync(user, roles, refreshToken, context);
 
                 if (string.IsNullOrEmpty(newToken))
                     return TResponse.Failure(500, "Failed to refresh session");
@@ -154,7 +154,7 @@ namespace Application.Services
 
                 var roles = await userManager.GetRolesAsync(user);
 
-                await tokenService.GetRefreshTokenAsync(user, roles, context, signin.RememberMe);
+                await tokenService.GetRefreshTokenAsync(user, roles, context, signin.RememberMe, null);
 
                 var handledToken = await tokenService.GetTokenAsync(user, roles);
 
