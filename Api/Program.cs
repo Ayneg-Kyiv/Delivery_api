@@ -152,7 +152,8 @@ if (app.Environment.IsDevelopment())
     app.UseCors(options =>
     {
         options.WithOrigins("https://localhost:3000",
-              "http://localhost:3000")
+              "http://localhost:3000", "https://delivery-web-client.vercel.app",
+              "http://delivery-web-client.vercel.app")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -182,8 +183,8 @@ using (var scope = app.Services.CreateScope())
         await ApplicationUserSeed.SeedUserAsync(userManager);
 
         // Додаємо Seed для ShippingOrder
-        var shippingDbContext = services.GetRequiredService<ShippingDbContext>();
-        await ShippingOrderSeed.SeedAsync(shippingDbContext);
+        //var shippingDbContext = services.GetRequiredService<ShippingDbContext>();
+        //await ShippingOrderSeed.SeedAsync(shippingDbContext);
     }
     catch (Exception ex)
     {
