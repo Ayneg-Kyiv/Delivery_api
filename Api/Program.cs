@@ -126,6 +126,9 @@ builder.Services.AddSingleton<IAuthorizationHandler, DynamicRoleHandler>();
 
 builder.Services.AddSignalR();
 
+builder.Services.AddHttpClient<Infrastructure.Services.IXaiSupportService, Infrastructure.Services.XaiSupportService>();
+builder.Services.AddDbContext<Infrastructure.Contexts.ShippingDbContext>();
+
 
 var app = builder.Build(); 
 
