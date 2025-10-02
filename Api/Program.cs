@@ -53,6 +53,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "X-XSRF-TOKEN";
+    options.Cookie.SameSite = SameSiteMode.None;
 });
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
