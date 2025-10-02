@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Domain.Models.DTOs.Support;
 using Infrastructure.Contexts;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace Infrastructure.Services
 {
@@ -19,27 +20,32 @@ namespace Infrastructure.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ShippingDbContext _dbContext;
-        private const string ApiKey = "xai-SSwkrOTSqLKdsA5qWYIspJx2WNjzTUCqnYh2ETfIYtkkgnXpbJXRJ4QmK87uyINsUKVBskuhzipfcYuf";
+        private readonly IConfiguration _configuration;
+        private string ApiKey; 
         private const string Endpoint = "https://api.x.ai/v1/chat/completions";
 
-        public XaiSupportService(HttpClient httpClient, ShippingDbContext dbContext)
+        public XaiSupportService(HttpClient httpClient, ShippingDbContext dbContext, IConfiguration configuration)
         {
             _httpClient = httpClient;
             _dbContext = dbContext;
+            _configuration = configuration;
+            ApiKey = _configuration["Xai:ApiKey"] ?? throw new ArgumentNullException("Missing Xai API Key");
         }
 
         public async Task<string> GetSupportReplyAsync(string userMessage, CancellationToken cancellationToken)
         {
             // Отримати дані з бази (наприклад, кількість замовлень та останнє замовлення)
-            var ordersCount = await _dbContext.ShippingOrders.CountAsync(cancellationToken);
-            var lastOrder = await _dbContext.ShippingOrders
-                .OrderByDescending(o => o.EstimatedShippingDate)
+            var ordersCount = await _dbContext.DeliveryOrders.CountAsync(cancellationToken);
+            var lastOrder = await _dbContext.DeliveryOrders
+                .Include(o => o.DeliverySlot)
+                .Include(o => o.EndLocation)
+                .OrderByDescending(o => o.CreatedAt)
                 .FirstOrDefaultAsync(cancellationToken);
 
             string dbInfo = $"Current orders count: {ordersCount}. ";
             if (lastOrder != null)
             {
-                dbInfo += $"Last order: Estimated cost {lastOrder.EstimatedCost}, Shipping date {lastOrder.EstimatedShippingDate}. ";
+                dbInfo += $"Last order: Estimated cost {lastOrder.DeliverySlot.ApproximatePrice}, Shipping date {lastOrder.EndLocation.DateTime}. ";
             }
 
             var payload = new
