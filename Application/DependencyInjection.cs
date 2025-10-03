@@ -23,7 +23,8 @@ namespace Application
             services.AddScoped<IArticleService, ArticleService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<ISessionDataService, SessionDataService>();
-            services.AddScoped<IFileService, FileService>();
+            //services.AddScoped<IFileService, FileService>();
+            services.AddScoped<IFileService, BlobService>();
             services.AddScoped<ShippingStartingPointService>();
             services.AddScoped<IShippingOrderService, ShippingOrderService>();
             services.AddScoped<IShippingOfferService, ShippingOfferService>();

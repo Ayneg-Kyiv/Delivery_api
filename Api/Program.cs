@@ -7,9 +7,9 @@ using Domain.Models.Identity;
 using Domain.Options;
 using Infrastructure.Contexts;
 using Infrastructure.Seeds;
-using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.FileProviders;
@@ -48,6 +48,11 @@ builder.Services.AddSwaggerGen(c =>
         Type = "string",
         Format = "binary"
     });
+});
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10 MB
 });
 
 builder.Services.AddAntiforgery(options =>
@@ -129,7 +134,7 @@ builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient<Infrastructure.Services.IXaiSupportService, Infrastructure.Services.XaiSupportService>();
 builder.Services.AddDbContext<Infrastructure.Contexts.ShippingDbContext>();
-
+    
 
 var app = builder.Build(); 
 
@@ -158,7 +163,9 @@ if (app.Environment.IsDevelopment())
     {
         options.WithOrigins("https://localhost:3000",
               "http://localhost:3000", "https://delivery-web-client.vercel.app",
-              "http://delivery-web-client.vercel.app")
+              "http://delivery-web-client.vercel.app",
+              "https://delivery-web-client.vercel.app/api/auth",
+              "http://delivery-web-client.vercel.app/api/auth")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -169,7 +176,9 @@ else
     app.UseCors(options =>
     {
         options.WithOrigins("https://delivery-web-client.vercel.app",
-              "http://delivery-web-client.vercel.app")
+              "http://delivery-web-client.vercel.app", 
+              "https://delivery-web-client.vercel.app/api/auth",
+              "http://delivery-web-client.vercel.app/api/auth")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();

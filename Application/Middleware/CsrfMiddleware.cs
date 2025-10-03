@@ -39,7 +39,7 @@ namespace Application.Middleware
                     {
                         SameSite = SameSiteMode.None,
                         Secure = true,
-                        HttpOnly = false,
+                        HttpOnly = false
                     });
             }
             else if (HttpMethods.IsPost(context.Request.Method) ||
