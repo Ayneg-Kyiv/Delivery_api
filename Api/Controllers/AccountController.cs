@@ -131,6 +131,17 @@ namespace Api.Controllers
         }
 
         [Authorize(Roles = "User")]
+        [HttpGet("user-approved-vehicles")]
+        public async Task<IActionResult> GetUserApprovedVehicles(CancellationToken cancellationToken)
+        {
+            var result = await service.GetUserApprovedVehiclesAsync(HttpContext, cancellationToken);
+
+            if (result.Success) return Ok(result);
+
+            return BadRequest(result);
+        }
+
+        [Authorize(Roles = "User")]
         [HttpGet("driver-required-data")]
         public async Task<IActionResult> GetDriverRequiredData(CancellationToken cancellationToken)
         {

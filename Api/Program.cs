@@ -1,5 +1,6 @@
 using Api.Handlers;
 using Api.Hubs;
+using Api.Middleware;
 using Api.Providers;
 using Application;
 using Application.Middleware;
@@ -207,6 +208,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCsrfProtection();
+app.UseEncryptionMiddleware();
 
 app.UseHttpsRedirection();
 

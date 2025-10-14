@@ -384,6 +384,23 @@ namespace Application.Services
             return TResponse.Successful(vehicles, "User vehicles retrieved successfully");
         }
 
+        public async Task<TResponse> GetUserApprovedVehiclesAsync(HttpContext context, CancellationToken cancellationToken)
+        {
+            var email = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(email))
+                return TResponse.Failure(403, "Access forbidden");
+
+            var user = await userManager.FindByEmailAsync(email ?? "");
+
+            if (user == null)
+                return TResponse.Failure(400, "Failed to retrieve user");
+
+            var vehicles = await vehicleRepository.FindAsync([v => v.OwnerId == user.Id, v => v.IsApproved], cancellationToken);
+
+            return TResponse.Successful(vehicles, "User vehicles retrieved successfully");
+        }
+
         public async Task<TResponse> ReturnDriverRequiredData(HttpContext context, CancellationToken cancellationToken)
         {
             var email = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
