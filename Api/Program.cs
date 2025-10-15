@@ -37,18 +37,18 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddCors();
 
-builder.Services.AddSwaggerGen(c =>
-{
-    // Other Swagger configurations
-    c.OperationFilter<FileUploadOperationFilter>();
+//builder.Services.AddSwaggerGen(c =>
+//{
+//    // Other Swagger configurations
+//    c.OperationFilter<FileUploadOperationFilter>();
 
-    // Configure correct schema generation for IFormFile
-    c.MapType<IFormFile>(() => new OpenApiSchema
-    {
-        Type = "string",
-        Format = "binary"
-    });
-});
+//    // Configure correct schema generation for IFormFile
+//    c.MapType<IFormFile>(() => new OpenApiSchema
+//    {
+//        Type = "string",
+//        Format = "binary"
+//    });
+//});
 
 builder.Services.Configure<FormOptions>(options =>
 {
@@ -145,8 +145,8 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 
 app.MapHub<MessagingHub>("/messagingHub");
 
-app.UseSwagger();
-app.UseSwaggerUI();
+//app.UseSwagger();
+//app.UseSwaggerUI();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
