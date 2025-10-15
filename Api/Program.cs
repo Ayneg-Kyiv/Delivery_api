@@ -207,7 +207,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCsrfProtection();
-//app.UseEncryptionMiddleware();
 
 app.UseHttpsRedirection();
 
