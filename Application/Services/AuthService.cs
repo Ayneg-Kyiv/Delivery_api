@@ -242,12 +242,22 @@ namespace Application.Services
 
                 var confirmationToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
 
-                var confirmationLink = $"https://localhost:3000/confirm-email?token={Uri.EscapeDataString(confirmationToken)}&email={Uri.EscapeDataString(user.Email!)}";
+                var confirmationLink = $"https://www.cargix-ukraine.org/confirm-email?token={Uri.EscapeDataString(confirmationToken)}&email={Uri.EscapeDataString(user.Email!)}";
+
+                var placeholders = new Dictionary<string, string>
+                {
+                    ["UserName"] = string.IsNullOrWhiteSpace(user.FirstName) ? "" : $" {user.FirstName}",
+                    ["ConfirmationLink"] = confirmationLink
+                };
+                
+                var templatePath = Path.Combine("Templates", "Emails", "SignupConfirmation.html");
+                
+                var emailBody = await EmailTemplateHelper.GetTemplateAsync(templatePath, placeholders);
 
                 await mailService.SendEmailAsync(
                     user.Email ?? throw new Exception("Email is null"),
                     "Email Confirmation",
-                    $"Please confirm your email by clicking this link: <a href=\"{confirmationLink}\">Confirm Email</a>");
+                    emailBody);
 
                 return TResponse.Successful("Success");
             }
