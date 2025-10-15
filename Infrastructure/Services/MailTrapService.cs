@@ -48,7 +48,16 @@ namespace Infrastructure.Services
                     EnableSsl = true
                 };
 
-                await client.SendMailAsync(new MailMessage(options.Value.SenderEmail, to, subject, body));
+                var message = new MailMessage
+                {
+                    From = new MailAddress(options.Value.SenderEmail),
+                    To = { new MailAddress(to) },
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = true
+                };
+
+                await client.SendMailAsync(message);
 
                 return true;
             }
@@ -57,6 +66,11 @@ namespace Infrastructure.Services
                 System.Console.WriteLine($"Error sending email: {ex.Message}");
                 return false;
             }
+        }
+
+        public Task<bool> SubscribeUserAsync(string email)
+        {
+            throw new NotImplementedException();
         }
     }
 }

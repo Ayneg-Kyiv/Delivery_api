@@ -22,6 +22,7 @@ namespace Domain.Interfaces.Services.Identity
         Task<TResponse> UpdateVehicleAsync(UpdateVehicleDto updateVehicle, HttpContext context, CancellationToken cancellationToken);
         Task<TResponse> DeleteVehicleAsync(Guid id, CancellationToken cancellationToken);
         Task<TResponse> GetUserVehiclesAsync(HttpContext context, CancellationToken cancellationToken);
+        Task<TResponse> GetUserApprovedVehiclesAsync(HttpContext context, CancellationToken cancellationToken);
         Task<TResponse> ReturnDriverRequiredData(HttpContext context, CancellationToken cancellationToken);
         Task<TResponse> SetDriverRequiredData(string? phoneNumber, IFormFile? Image, IFormFile? profileImage, HttpContext context, CancellationToken cancellationToken);
     }

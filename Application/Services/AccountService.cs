@@ -187,13 +187,22 @@ namespace Application.Services
                 if (string.IsNullOrWhiteSpace(token))
                     return TResponse.Failure(500, "Failed to generate password reset token");
 
-                var resetLink = $"https://localhost:3000/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email!)}";
+                var resetLink = $"https://www.cargix-ukraine.org/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email!)}";
+                
+                var placeholders = new Dictionary<string, string>
+                {
+                    ["ResetLink"] = resetLink
+                };
+                
+                var templatePath = Path.Combine("Templates", "Emails", "PasswordReset.html");
+                
+                var emailBody = await EmailTemplateHelper.GetTemplateAsync(templatePath, placeholders);
 
                 var result = await mailService.SendEmailAsync(
                     user.Email ?? throw new Exception("User email is null"),
                     "Password Reset Request",
-                    $"You requested a password reset. Click the link below to reset your password:\n{resetLink}");
-
+                    emailBody);
+                
                 if (!result) return TResponse.Failure(500, "Failed to send password reset email");
 
                 return TResponse.Successful("Password reset email sent successfully");
@@ -380,6 +389,23 @@ namespace Application.Services
                 return TResponse.Failure(400, "Failed to retrieve user");
             
             var vehicles = await vehicleRepository.FindAsync([v => v.OwnerId == user.Id], cancellationToken);
+
+            return TResponse.Successful(vehicles, "User vehicles retrieved successfully");
+        }
+
+        public async Task<TResponse> GetUserApprovedVehiclesAsync(HttpContext context, CancellationToken cancellationToken)
+        {
+            var email = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(email))
+                return TResponse.Failure(403, "Access forbidden");
+
+            var user = await userManager.FindByEmailAsync(email ?? "");
+
+            if (user == null)
+                return TResponse.Failure(400, "Failed to retrieve user");
+
+            var vehicles = await vehicleRepository.FindAsync([v => v.OwnerId == user.Id, v => v.IsApproved], cancellationToken);
 
             return TResponse.Successful(vehicles, "User vehicles retrieved successfully");
         }

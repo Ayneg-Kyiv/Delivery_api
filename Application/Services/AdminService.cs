@@ -38,10 +38,15 @@ namespace Application.Services
             if(vehicle.First() == null)
                 return TResponse.Failure(404, "Vehicle associated with the application not found.");
 
-            var addToRoleResult = await userManager.AddToRoleAsync(user, "Driver");
+            var isInRole = await userManager.IsInRoleAsync(user, "Driver");
 
-            if(!addToRoleResult.Succeeded)
-                return TResponse.Failure(500, "Failed to assign Driver role to the user.");
+            if (!isInRole)
+            {
+                var addToRoleResult = await userManager.AddToRoleAsync(user, "Driver");
+
+                if (!addToRoleResult.Succeeded)
+                    return TResponse.Failure(500, "Failed to assign Driver role to the user.");
+            }
 
             vehicle.First().IsApproved = true;
 
