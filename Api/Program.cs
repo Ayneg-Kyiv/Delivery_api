@@ -1,6 +1,5 @@
 using Api.Handlers;
 using Api.Hubs;
-using Api.Middleware;
 using Api.Providers;
 using Application;
 using Application.Middleware;
